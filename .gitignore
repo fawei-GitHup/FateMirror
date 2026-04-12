@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright cli logs
+.playwright-cli/
+
+# output artifacts
+/output/
+
+# doc binaries
+*.docx
+*.zip
