@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Sparkles, ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { resolvePlan } from '@/lib/billing/entitlements';
@@ -12,7 +12,7 @@ import type { Subscription } from '@/types';
 
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/70 p-5">
+    <div className="card-glow rounded-2xl bg-card/60 p-5 backdrop-blur">
       <h3 className="text-sm font-semibold text-foreground">{question}</h3>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{answer}</p>
     </div>
@@ -36,34 +36,39 @@ export default async function PricingPage() {
   const pricingPlans = getPricingPlans((key) => tPlans(key));
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(120,119,198,0.1),_transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,1))]">
-      <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
-        <Link href="/" className="text-xl font-bold tracking-tight">
-          <span className="text-primary">Fate</span>
-          <span className="text-muted-foreground">Mirror</span>
+    <div className="min-h-screen">
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 mx-auto flex w-full max-w-6xl items-center justify-between border-b border-border/30 bg-background/80 px-6 py-5 backdrop-blur-xl">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-gradient">Fate</span>
+          <span className="text-foreground/70">Mirror</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/auth/login">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               {t('navLogin')}
             </Button>
           </Link>
           <Link href="/auth/signup">
-            <Button size="sm">{t('navGetStarted')}</Button>
+            <Button size="sm" className="btn-gradient border-0 text-white">{t('navGetStarted')}</Button>
           </Link>
         </div>
       </nav>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 pb-16 pt-8">
-        <section className="grid gap-8 rounded-[2rem] border border-border/50 bg-background/85 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:grid-cols-[1.3fr_0.7fr] md:p-12">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 pb-16 pt-12">
+        {/* Hero section */}
+        <section className="card-glow grid gap-8 rounded-3xl bg-card/60 p-8 backdrop-blur md:grid-cols-[1.3fr_0.7fr] md:p-12">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
               <Sparkles className="size-4" />
               {t('badge')}
             </div>
             <div className="space-y-4">
-              <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-6xl">
-                {t('headline')}
+              <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+                <span className="text-gradient">{t('headline')}</span>
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
                 {t('description')}
@@ -82,7 +87,7 @@ export default async function PricingPage() {
               ) : null}
               {!isAuthenticated ? (
                 <Link href="/auth/signup">
-                  <Button variant="outline" size="lg">
+                  <Button variant="outline" size="lg" className="border-border/50 hover:border-primary/30">
                     {t('startFree')}
                   </Button>
                 </Link>
@@ -90,7 +95,7 @@ export default async function PricingPage() {
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-border/50 bg-muted/40 p-6">
+          <div className="rounded-2xl border border-border/50 bg-secondary/40 p-6">
             <p className="text-sm font-medium text-foreground">{t('proChangesTitle')}</p>
             <div className="mt-5 space-y-4">
               {[
@@ -99,7 +104,7 @@ export default async function PricingPage() {
                 t('proChange3'),
               ].map((item) => (
                 <div key={item} className="flex gap-3 text-sm leading-6 text-muted-foreground">
-                  <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
+                  <div className="mt-1 rounded-full bg-primary/15 p-1 text-primary">
                     <Check className="size-3.5" />
                   </div>
                   <p>{item}</p>
@@ -109,74 +114,85 @@ export default async function PricingPage() {
           </div>
         </section>
 
+        {/* Plans */}
         <section className="grid gap-6 lg:grid-cols-3">
-          {pricingPlans.map((plan) => {
-            return (
-              <Card
-                key={plan.slug}
-                className={plan.featured ? 'border-primary/40 shadow-[0_24px_60px_rgba(59,130,246,0.14)]' : 'border-border/50'}
-              >
-                <CardHeader className="space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                        {plan.eyebrow}
-                      </p>
-                      <CardTitle className="mt-2 text-2xl">{plan.name}</CardTitle>
-                    </div>
-                    {plan.featured ? (
-                      <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                        {t('recommended')}
-                      </span>
-                    ) : null}
-                  </div>
+          {pricingPlans.map((plan) => (
+            <Card
+              key={plan.slug}
+              className={`card-glow bg-card/60 backdrop-blur ${
+                plan.featured
+                  ? 'border-primary/30 shadow-[0_0_40px_rgba(139,92,246,0.12)]'
+                  : 'border-border/30'
+              }`}
+            >
+              <CardHeader className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-4xl font-semibold tracking-tight text-foreground">{plan.priceLabel}</div>
-                    <CardDescription className="mt-3 text-sm leading-6">{plan.description}</CardDescription>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      {plan.eyebrow}
+                    </p>
+                    <CardTitle className="mt-2 text-2xl">{plan.name}</CardTitle>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex gap-3 text-sm leading-6 text-muted-foreground">
-                        <Check className="mt-1 size-4 text-primary" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  {plan.slug === 'pro' ? (
-                    <div className="w-full rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm text-muted-foreground">
-                      {t('paypalPanelHint')}
-                    </div>
-                  ) : (
-                    <Link href={plan.ctaHref}>
-                      <Button variant="outline" size="lg" className="w-full">
-                        {plan.ctaLabel}
-                      </Button>
-                    </Link>
-                  )}
-                </CardFooter>
-              </Card>
-            );
-          })}
+                  {plan.featured ? (
+                    <span className="btn-gradient rounded-full px-3 py-1 text-xs font-semibold text-white">
+                      {t('recommended')}
+                    </span>
+                  ) : null}
+                </div>
+                <div>
+                  <div className="text-4xl font-bold tracking-tight text-foreground">
+                    {plan.priceLabel}
+                  </div>
+                  <CardDescription className="mt-3 text-sm leading-6">
+                    {plan.description}
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex gap-3 text-sm leading-6 text-muted-foreground">
+                      <Check className="mt-1 size-4 text-primary" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                {plan.slug === 'pro' ? (
+                  <div className="w-full rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm text-muted-foreground">
+                    {t('paypalPanelHint')}
+                  </div>
+                ) : (
+                  <Link href={plan.ctaHref} className="w-full">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full border-border/50 hover:border-primary/30 hover:bg-card"
+                    >
+                      {plan.ctaLabel}
+                    </Button>
+                  </Link>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
         </section>
 
+        {/* FAQ */}
         <section className="grid gap-4 md:grid-cols-3">
-          <FaqItem
-            question={t('faq1Question')}
-            answer={t('faq1Answer')}
-          />
-          <FaqItem
-            question={t('faq2Question')}
-            answer={t('faq2Answer')}
-          />
-          <FaqItem
-            question={t('faq3Question')}
-            answer={t('faq3Answer')}
-          />
+          <FaqItem question={t('faq1Question')} answer={t('faq1Answer')} />
+          <FaqItem question={t('faq2Question')} answer={t('faq2Answer')} />
+          <FaqItem question={t('faq3Question')} answer={t('faq3Answer')} />
         </section>
+
+        {/* Back to home */}
+        <div className="text-center">
+          <Link href="/" className="group inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Back to home
+          </Link>
+        </div>
       </main>
     </div>
   );

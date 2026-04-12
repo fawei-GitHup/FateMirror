@@ -48,20 +48,25 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ═══════════════════════════════════════════
+   Flow Icons 风格深色主题 — 极简 + 紫蓝点缀
+   背景: #0a0a0f  卡片: #12121a  紫: #8b5cf6
+   ═══════════════════════════════════════════ */
+
 :root {
   --font-sans:
-    "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue",
-    Arial, sans-serif;
+    "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
   --font-mono:
-    "Cascadia Code", "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo,
-    monospace;
-  --background: oklch(1 0 0);
+    "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  /* 浅色模式（备用） */
+  --background: oklch(0.985 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.541 0.213 275.5);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -72,55 +77,55 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --ring: oklch(0.541 0.213 275.5);
+  --chart-1: oklch(0.541 0.213 275.5);
+  --chart-2: oklch(0.488 0.243 264.376);
+  --chart-3: oklch(0.439 0.2 280);
+  --chart-4: oklch(0.371 0.15 290);
+  --chart-5: oklch(0.269 0.1 300);
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.541 0.213 275.5);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.541 0.213 275.5);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0a0a0f;
+  --foreground: #e8e8ed;
+  --card: #12121a;
+  --card-foreground: #e8e8ed;
+  --popover: #12121a;
+  --popover-foreground: #e8e8ed;
+  --primary: #8b5cf6;
+  --primary-foreground: #fafafa;
+  --secondary: #1a1a25;
+  --secondary-foreground: #e8e8ed;
+  --muted: #1a1a25;
+  --muted-foreground: #71717a;
+  --accent: #1e1e2e;
+  --accent-foreground: #e8e8ed;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #8b5cf6;
+  --chart-1: #8b5cf6;
+  --chart-2: #6366f1;
+  --chart-3: #a78bfa;
+  --chart-4: #818cf8;
+  --chart-5: #c4b5fd;
+  --sidebar: #0e0e15;
+  --sidebar-foreground: #e8e8ed;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #1a1a25;
+  --sidebar-accent-foreground: #e8e8ed;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #8b5cf6;
 }
 
 @layer base {
@@ -132,5 +137,51 @@
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* ─── 全局渐变背景 ─── */
+body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(139, 92, 246, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(99, 102, 241, 0.06), transparent);
+}
+
+/* ─── 微光卡片悬停效果 ─── */
+.card-glow {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.card-glow:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.1),
+    0 8px 40px rgba(139, 92, 246, 0.08);
+  transform: translateY(-2px);
+}
+
+/* ─── 渐变文字 ─── */
+.text-gradient {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── 渐变按钮 ─── */
+.btn-gradient {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  transition: all 0.2s ease;
+}
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+}
+
+/* ─── 微光分割线 ─── */
+.separator-glow {
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+  height: 1px;
 }
