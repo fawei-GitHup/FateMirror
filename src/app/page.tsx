@@ -67,7 +67,7 @@ export default async function LandingPage() {
               </button>
             </Link>
             <Link href="/pricing">
-              <button className="btn-outline-glow overflow-visible rounded-xl px-8 py-2.5 text-base text-foreground/80">
+              <button className="btn-gradient overflow-visible rounded-xl border-0 px-8 py-2.5 text-base text-white" style={{ '--button-color': '148, 163, 184' } as React.CSSProperties}>
                 {t('seePricing')}
               </button>
             </Link>
