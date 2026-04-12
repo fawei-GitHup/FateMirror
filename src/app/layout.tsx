@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { StarryBackground } from '@/components/ui/starry-background';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="dark h-full antialiased">
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <StarryBackground />
         <NextIntlClientProvider messages={messages}>
           <TooltipProvider>{children}</TooltipProvider>
         </NextIntlClientProvider>

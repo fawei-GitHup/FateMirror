@@ -53,11 +53,12 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <Card className="card-glow w-full max-w-md border-border/30 bg-card/60 backdrop-blur">
+      <div className="relative flex min-h-screen items-center justify-center px-4">
+        <div className="top-glow" />
+        <Card className="relative z-10 card-glow w-full max-w-md border-border/30 bg-card/60 backdrop-blur">
           <CardHeader className="text-center">
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/15">
-              <span className="text-xl">✉️</span>
+              <span className="text-xl">&#x2709;</span>
             </div>
             <CardTitle>{t('checkEmail')}</CardTitle>
             <CardDescription>{t('confirmationSentTo', { email })}</CardDescription>
@@ -75,8 +76,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="card-glow w-full max-w-md border-border/30 bg-card/60 backdrop-blur">
+    <div className="relative flex min-h-screen items-center justify-center px-4">
+      <div className="top-glow" />
+      <Card className="relative z-10 card-glow w-full max-w-md border-border/30 bg-card/60 backdrop-blur">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
             <Sparkles className="h-5 w-5 text-primary" />

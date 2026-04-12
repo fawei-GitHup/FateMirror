@@ -8,8 +8,7 @@ export default async function LandingPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      {/* ─── 星空背景 ─── */}
-      <div className="starry-bg" />
+      {/* ─── 顶部蓝色光晕 ─── */}
       <div className="top-glow" />
 
       {/* ─── Nav ─── */}
@@ -62,19 +61,15 @@ export default async function LandingPage() {
           {/* CTA Buttons */}
           <div className="flex flex-col items-center justify-center gap-4 pt-2 sm:flex-row">
             <Link href="/auth/signup">
-              <Button size="lg" className="btn-gradient group overflow-visible border-0 px-8 py-6 text-base text-white">
+              <button className="btn-rainbow group overflow-visible text-base">
                 {t('cta')}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
+              </button>
             </Link>
             <Link href="/pricing">
-              <Button
-                variant="outline"
-                size="lg"
-                className="btn-outline-glow overflow-visible border-white/10 bg-white/[0.03] px-8 py-6 text-base text-foreground/80 hover:border-white/20 hover:bg-white/[0.06]"
-              >
+              <button className="btn-outline-glow overflow-visible rounded-xl px-8 py-2.5 text-base text-foreground/80">
                 {t('seePricing')}
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
