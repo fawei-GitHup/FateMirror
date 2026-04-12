@@ -79,7 +79,7 @@
     "newJournalEntry": "New Journal Entry",
     "saving": "Saving...",
     "saveFailed": "Failed to save journal entry. Please try again.",
-    "guidedGreeting": "What's sitting heaviest on your mind right now? Don't filter it. Just say it.",
+    "guidedGreeting": "Hey, nice to meet you. What's been on your mind lately? Big or small, let's talk about it.",
     "guidedPreviewAction": "End & preview",
     "guidedPreviewTitle": "Preview guided journal",
     "guidedPreviewDescription": "Review the extracted title, transcript, summary, and tags before saving.",
@@ -159,6 +159,8 @@
     "aiNotConfigured": "Not configured"
   },
   "chat": {
+    "you": "You",
+    "mo": "Mo",
     "empty": "Start writing. Lao Mo is listening.",
     "guidedPlaceholder": "Share what comes to mind...",
     "freewritePlaceholder": "Write freely...",
@@ -220,6 +222,7 @@
     "levelDescription4": "You chose differently when the loop came back. Real change.",
     "levelDescription5": "A new behavior held for 30 days. The root is deepening.",
     "levelDescription6": "Three cycles broken. You are the mirror now.",
+    "cognitionVersion": "Cognition v{version}",
     "journalEntries": "{count} journal entries",
     "updated": "Updated {date}",
     "microActions": "Micro Actions",

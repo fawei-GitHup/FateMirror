@@ -25,6 +25,7 @@ import { maybeGenerateChapters } from '@/lib/chapters/chapter-generator';
 import { syncActionTasks } from '@/lib/actions/task-sync';
 import { getEntitlements, resolvePlan } from '@/lib/billing/entitlements';
 import { getModelForPlan, type AIUsageContext } from '@/lib/ai/client';
+import { resolveLocale } from '@/i18n/config';
 import type { PlanType } from '@/types/database.ts';
 
 export interface PipelineResult {
@@ -188,7 +189,8 @@ export async function processJournal(
             pattern.type,
             journal,
             pipelineModel,
-            buildUsageContext('habit_loop_extract')
+            buildUsageContext('habit_loop_extract'),
+            resolveLocale(journal.language)
           );
           if (loop) {
             result.habitLoopCreated = true;
@@ -231,7 +233,7 @@ export async function processJournal(
   // Step 8: Chapter generation (reuses `plan` resolved at pipeline start)
   try {
     if (getEntitlements(plan).chaptersEnabled) {
-      const chapters = await maybeGenerateChapters(supabase, userId);
+      const chapters = await maybeGenerateChapters(supabase, userId, resolveLocale(journal.language));
       result.chaptersCreated = chapters.length;
     }
   } catch (err) {
@@ -244,11 +246,13 @@ export async function processJournal(
       supabase.from('profiles').select('*').eq('user_id', userId).single(),
       supabase.from('habit_loops').select('*').eq('user_id', userId),
     ]);
+    const journalLocale = resolveLocale(journal.language);
     const synced = await syncActionTasks(
       supabase,
       userId,
       (profileData as Profile | null) ?? null,
-      (loopsData as HabitLoop[] | null) ?? []
+      (loopsData as HabitLoop[] | null) ?? [],
+      journalLocale
     );
     result.actionTasksSynced = synced.length;
   } catch (err) {

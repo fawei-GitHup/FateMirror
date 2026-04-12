@@ -79,7 +79,7 @@
     "newJournalEntry": "新日记",
     "saving": "保存中...",
     "saveFailed": "保存失败，请重试。",
-    "guidedGreeting": "现在你心里最沉的是什么？别过滤，直接说出来。",
+    "guidedGreeting": "嗨，很高兴认识你。今天有什么在你脑海里转来转去的？不管大事小事，都可以说说。",
     "guidedPreviewAction": "结束并预览",
     "guidedPreviewTitle": "预览本次引导式日记",
     "guidedPreviewDescription": "保存前先检查标题、正文、摘要和标签，你可以在这里修改。",
@@ -159,6 +159,8 @@
     "aiNotConfigured": "未配置"
   },
   "chat": {
+    "you": "你",
+    "mo": "墨",
     "empty": "开始写吧。老墨在听。",
     "guidedPlaceholder": "把此刻最先冒出来的内容说出来...",
     "freewritePlaceholder": "自由写下去...",
@@ -220,6 +222,7 @@
     "levelDescription4": "当循环再次出现时，你做了不同的选择。这才是真变化。",
     "levelDescription5": "一个新行为稳定坚持了 30 天，根正在扎深。",
     "levelDescription6": "你已经打破了三个循环。现在，你自己就是那面镜子。",
+    "cognitionVersion": "认知版本 v{version}",
     "journalEntries": "{count} 篇日记",
     "updated": "更新于 {date}",
     "microActions": "微行动",

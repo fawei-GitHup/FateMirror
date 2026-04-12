@@ -1,14 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ActionTask, HabitLoop, Profile } from '@/types';
+import type { Locale } from '@/i18n/config';
 import { buildMicroActions } from '@/lib/actions/micro-actions';
 
 export async function syncActionTasks(
   supabase: SupabaseClient,
   userId: string,
   profile: Profile | null,
-  loops: HabitLoop[]
+  loops: HabitLoop[],
+  locale: Locale = 'en'
 ): Promise<ActionTask[]> {
-  const generated = buildMicroActions(profile, loops);
+  const generated = buildMicroActions(profile, loops, locale);
 
   const activeLoop =
     loops.find((loop) => loop.status === 'breaking') ??

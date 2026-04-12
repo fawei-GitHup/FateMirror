@@ -13,6 +13,7 @@ import { formatLocalizedDate } from '@/lib/i18n/format-date';
 export default async function ProfilePage() {
   const locale = await getLocale();
   const t = await getTranslations('profile');
+  const tJournal = await getTranslations('journal');
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -50,7 +51,7 @@ export default async function ProfilePage() {
         <CardContent>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span>{t('journalEntries', { count: totalJournalCount })}</span>
-            <span>Cognition v{profile?.cognition_version ?? 0}</span>
+            <span>{t('cognitionVersion', { version: profile?.cognition_version ?? 0 })}</span>
             {profile?.cognition_updated_at && (
               <span>{t('updated', { date: formatLocalizedDate(profile.cognition_updated_at, locale) })}</span>
             )}
@@ -89,7 +90,7 @@ export default async function ProfilePage() {
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {profile.thinking_distortions.map((distortion) => (
                       <Badge key={distortion} variant="destructive" className="text-xs">
-                        {distortion}
+                        {tJournal.has(`distortionLabels.${distortion}`) ? tJournal(`distortionLabels.${distortion}` as 'distortionLabels.catastrophize') : distortion}
                       </Badge>
                     ))}
                   </div>
@@ -108,13 +109,23 @@ export default async function ProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center gap-4 md:flex-row md:items-start">
-                <BehaviorRadar scores={(profile?.behavior_scores as Record<string, number>) || {}} />
+                <BehaviorRadar
+                  scores={(profile?.behavior_scores as Record<string, number>) || {}}
+                  labels={{
+                    'over-compensate': tJournal('behaviorLabels.over-compensate'),
+                    avoid: tJournal('behaviorLabels.avoid'),
+                    please: tJournal('behaviorLabels.please'),
+                    control: tJournal('behaviorLabels.control'),
+                    prove: tJournal('behaviorLabels.prove'),
+                    victim: tJournal('behaviorLabels.victim'),
+                  }}
+                />
                 <div className="flex-1 space-y-2">
                   {profile?.behavior_primary && (
                     <div className="flex items-center justify-between rounded-md bg-zinc-900 px-3 py-2">
                       <div>
                         <span className="text-xs text-muted-foreground">{t('primary')}</span>
-                        <p className="text-sm font-medium capitalize">{profile.behavior_primary}</p>
+                        <p className="text-sm font-medium">{tJournal.has(`behaviorLabels.${profile.behavior_primary}`) ? tJournal(`behaviorLabels.${profile.behavior_primary}` as 'behaviorLabels.please') : profile.behavior_primary}</p>
                       </div>
                       <span className="text-lg font-bold text-purple-400">
                         {Math.round((profile.behavior_scores?.[profile.behavior_primary] ?? 0) * 100)}%
@@ -125,7 +136,7 @@ export default async function ProfilePage() {
                     <div className="flex items-center justify-between rounded-md bg-zinc-900 px-3 py-2">
                       <div>
                         <span className="text-xs text-muted-foreground">{t('secondary')}</span>
-                        <p className="text-sm font-medium capitalize">{profile.behavior_secondary}</p>
+                        <p className="text-sm font-medium">{tJournal.has(`behaviorLabels.${profile.behavior_secondary}`) ? tJournal(`behaviorLabels.${profile.behavior_secondary}` as 'behaviorLabels.please') : profile.behavior_secondary}</p>
                       </div>
                       <span className="text-lg font-bold text-purple-400/60">
                         {Math.round((profile.behavior_scores?.[profile.behavior_secondary] ?? 0) * 100)}%

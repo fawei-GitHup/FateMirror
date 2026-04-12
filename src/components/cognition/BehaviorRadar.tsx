@@ -5,19 +5,30 @@ import * as d3 from 'd3';
 
 interface BehaviorRadarProps {
   scores: Record<string, number>;
+  labels?: Record<string, string>;
   size?: number;
 }
 
-const ARCHETYPES = [
-  { key: 'over-compensate', label: 'Over-Compensate' },
-  { key: 'avoid', label: 'Avoid' },
-  { key: 'please', label: 'Please' },
-  { key: 'control', label: 'Control' },
-  { key: 'prove', label: 'Prove' },
-  { key: 'victim', label: 'Victim' },
-];
+const ARCHETYPE_KEYS = [
+  'over-compensate',
+  'avoid',
+  'please',
+  'control',
+  'prove',
+  'victim',
+] as const;
 
-export function BehaviorRadar({ scores, size = 240 }: BehaviorRadarProps) {
+const DEFAULT_LABELS: Record<string, string> = {
+  'over-compensate': 'Over-Compensate',
+  avoid: 'Avoid',
+  please: 'Please',
+  control: 'Control',
+  prove: 'Prove',
+  victim: 'Victim',
+};
+
+export function BehaviorRadar({ scores, labels, size = 240 }: BehaviorRadarProps) {
+  const resolvedLabels = labels ?? DEFAULT_LABELS;
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -29,7 +40,7 @@ export function BehaviorRadar({ scores, size = 240 }: BehaviorRadarProps) {
     const center = size / 2;
     const radius = size / 2 - 40;
     const levels = 4;
-    const angleSlice = (Math.PI * 2) / ARCHETYPES.length;
+    const angleSlice = (Math.PI * 2) / ARCHETYPE_KEYS.length;
 
     const g = svg
       .append('g')
@@ -46,7 +57,7 @@ export function BehaviorRadar({ scores, size = 240 }: BehaviorRadarProps) {
     }
 
     // Draw axis lines + labels
-    ARCHETYPES.forEach((arch, i) => {
+    ARCHETYPE_KEYS.forEach((key, i) => {
       const angle = angleSlice * i - Math.PI / 2;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
@@ -69,12 +80,12 @@ export function BehaviorRadar({ scores, size = 240 }: BehaviorRadarProps) {
         .attr('dominant-baseline', 'middle')
         .attr('fill', '#71717a')
         .attr('font-size', '10px')
-        .text(arch.label);
+        .text(resolvedLabels[key] ?? key);
     });
 
     // Draw data polygon
-    const dataPoints = ARCHETYPES.map((arch, i) => {
-      const value = scores[arch.key] || 0;
+    const dataPoints = ARCHETYPE_KEYS.map((key, i) => {
+      const value = scores[key] || 0;
       const angle = angleSlice * i - Math.PI / 2;
       return {
         x: Math.cos(angle) * radius * value,
@@ -88,7 +99,7 @@ export function BehaviorRadar({ scores, size = 240 }: BehaviorRadarProps) {
       .radius((d) => radius * d)
       .curve(d3.curveLinearClosed);
 
-    const values = ARCHETYPES.map((arch) => scores[arch.key] || 0);
+    const values = ARCHETYPE_KEYS.map((key) => scores[key] || 0);
 
     g.append('path')
       .datum(values)
@@ -105,7 +116,7 @@ export function BehaviorRadar({ scores, size = 240 }: BehaviorRadarProps) {
         .attr('r', 3)
         .attr('fill', '#a855f7');
     });
-  }, [scores, size]);
+  }, [scores, resolvedLabels, size]);
 
   return (
     <svg

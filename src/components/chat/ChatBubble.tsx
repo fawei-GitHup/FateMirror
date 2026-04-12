@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { ChatMessage } from '@/hooks/useChat';
 import { formatChatText } from '@/lib/ai/format-chat';
@@ -11,6 +12,7 @@ interface ChatBubbleProps {
 }
 
 export function ChatBubble({ message, isStreaming = false }: ChatBubbleProps) {
+  const t = useTranslations('chat');
   const isUser = message.role === 'user';
   const paragraphs = message.content ? formatChatText(message.content) : [];
 
@@ -31,7 +33,7 @@ export function ChatBubble({ message, isStreaming = false }: ChatBubbleProps) {
               : 'bg-zinc-700 text-zinc-200'
           )}
         >
-          {isUser ? 'You' : 'Mo'}
+          {isUser ? t('you') : t('mo')}
         </AvatarFallback>
       </Avatar>
 

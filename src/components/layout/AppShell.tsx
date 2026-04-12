@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
+import { LocaleToggle } from '@/components/layout/LocaleToggle';
 
 interface AppShellProps {
   user: {
@@ -112,15 +113,18 @@ function SidebarContent({
             </Badge>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 text-muted-foreground"
-          onClick={onLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          {t('signOut')}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 justify-start gap-2 text-muted-foreground"
+            onClick={onLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            {t('signOut')}
+          </Button>
+          <LocaleToggle />
+        </div>
       </div>
     </div>
   );

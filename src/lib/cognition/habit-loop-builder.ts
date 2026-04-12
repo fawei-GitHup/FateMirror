@@ -8,6 +8,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateJson, getLightModel, type AIUsageContext } from '@/lib/ai/client';
 import type { Journal, HabitLoop } from '@/types';
+import type { Locale } from '@/i18n/config';
 
 const MIN_TRIGGERS_FOR_LOOP = 3;
 
@@ -20,7 +21,8 @@ export async function maybeCreateHabitLoop(
   behaviorType: string,
   currentJournal: Journal,
   model?: string,
-  usage?: AIUsageContext
+  usage?: AIUsageContext,
+  locale: Locale = 'en'
 ): Promise<HabitLoop | null> {
   // Query journals with this behavior pattern
   const { data: matchingJournals } = await supabase
@@ -66,7 +68,7 @@ export async function maybeCreateHabitLoop(
   }
 
   // Extract habit loop via AI from the matching journals
-  const loop = await aiExtractHabitLoop(journals, behaviorType, model, usage);
+  const loop = await aiExtractHabitLoop(journals, behaviorType, model, usage, locale);
   if (!loop) return null;
 
   const journalIds = journals.map((j) => j.id);
@@ -112,7 +114,8 @@ async function aiExtractHabitLoop(
   journals: Journal[],
   behaviorType: string,
   model?: string,
-  usage?: AIUsageContext
+  usage?: AIUsageContext,
+  locale: Locale = 'en'
 ): Promise<AILoopOutput | null> {
   try {
     const summaries = journals
@@ -122,6 +125,10 @@ async function aiExtractHabitLoop(
           `Entry ${i + 1} (${j.created_at.split('T')[0]}): ${j.ai_summary || j.content.slice(0, 200)}`
       )
       .join('\n');
+
+    const langInstruction = locale === 'zh'
+      ? '\n\nIMPORTANT: All output values MUST be in Chinese (简体中文).'
+      : '';
 
     const prompt = `Based on these ${journals.length} journal entries that share the behavior pattern "${behaviorType}",
 extract the recurring habit loop:
@@ -137,7 +144,7 @@ Output ONLY valid JSON:
   "response": "What does the user actually do? Their default action.",
   "reward": "What short-term relief do they get?",
   "hidden_cost": "What is the long-term damage they don't see in the moment?"
-}`;
+}${langInstruction}`;
 
     const parsed = await generateJson<AILoopOutput>({
       model: model || getLightModel(),

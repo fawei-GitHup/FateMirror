@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Chapter } from '@/types';
+import type { Locale } from '@/i18n/config';
 
 export const CHAPTER_SIZE = 15;
 
@@ -73,16 +74,31 @@ export function pickUnchapteredJournalBatch(
 
 export function buildChapterDraft(
   journals: ChapterSourceJournal[],
-  nextNumber: number
+  nextNumber: number,
+  locale: Locale = 'en'
 ): ChapterDraft {
   const rankedThemes = rankTags(journals.map((journal) => journal.themes)).slice(0, 3);
   const rankedEmotions = rankTags(journals.map((journal) => journal.emotions)).slice(0, 2);
-  const primaryTheme = rankedThemes[0] ?? 'reflection';
+  const primaryTheme = rankedThemes[0] ?? (locale === 'zh' ? '反思' : 'reflection');
   const secondaryTheme = rankedThemes[1];
-  const primaryEmotion = rankedEmotions[0] ?? 'tension';
+  const primaryEmotion = rankedEmotions[0] ?? (locale === 'zh' ? '紧张' : 'tension');
   const start = toDateOnly(journals[0].created_at);
   const end = toDateOnly(journals[journals.length - 1].created_at);
   const readablePrimary = toTitleCase(primaryTheme);
+
+  if (locale === 'zh') {
+    return {
+      number: nextNumber,
+      title: `${readablePrimary}篇章`,
+      subtitle: secondaryTheme
+        ? `${toTitleCase(primaryTheme)}与${toTitleCase(secondaryTheme)}交织`
+        : `${readablePrimary}反复浮现`,
+      date_start: start,
+      date_end: end,
+      themes: rankedThemes,
+      ai_narrative: `从 ${start} 到 ${end}，你的日记不断围绕"${primaryTheme}"展开。条目反复将"${primaryTheme}"${secondaryTheme ? `与"${secondaryTheme}"` : ''}联系在一起，情绪基调偏向"${primaryEmotion}"。这一章节标记了你故事中一段连贯的脉络，而非孤立事件。`,
+    };
+  }
 
   return {
     number: nextNumber,
@@ -115,7 +131,8 @@ async function attachLifeNodesToChapter(
 
 export async function maybeGenerateChapters(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  locale: Locale = 'en'
 ): Promise<Chapter[]> {
   const [{ data: chaptersData }, { data: journalsData }] = await Promise.all([
     supabase
@@ -142,7 +159,7 @@ export async function maybeGenerateChapters(
       break;
     }
 
-    const draft = buildChapterDraft(batch, nextNumber);
+    const draft = buildChapterDraft(batch, nextNumber, locale);
     const { data: inserted } = await supabase
       .from('chapters')
       .insert({

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight, Sparkles, Brain, RefreshCw, TreePine, BookOpen, MessageCircle, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LocaleToggle } from '@/components/layout/LocaleToggle';
 
 /* ─── App Showcase Mockups ─── */
 
@@ -276,6 +277,7 @@ export default async function LandingPage() {
           </span>
         </Link>
         <div className="flex items-center gap-2">
+          <LocaleToggle />
           <Link href="/pricing">
             <Button variant="ghost" size="sm" className="text-sm text-muted-foreground hover:text-foreground">
               {t('pricing')}

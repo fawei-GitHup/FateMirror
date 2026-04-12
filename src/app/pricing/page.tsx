@@ -3,6 +3,7 @@ import { Check, Sparkles, ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { resolvePlan } from '@/lib/billing/entitlements';
+import { LocaleToggle } from '@/components/layout/LocaleToggle';
 import { isPayPalPurchaseLocked } from '@/lib/billing/subscription-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,7 @@ export default async function PricingPage() {
           <span className="text-foreground/70">Mirror</span>
         </Link>
         <div className="flex items-center gap-3">
+          <LocaleToggle />
           <Link href="/auth/login">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               {t('navLogin')}
