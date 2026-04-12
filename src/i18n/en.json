@@ -309,7 +309,12 @@
     "featureCognitionDesc": "Diagnose your thinking level (L1-L4), behavior archetypes, and hidden habit loops.",
     "featureTree": "Destiny Tree",
     "featureTreeDesc": "Watch your life choices grow into a visual tree. Red links reveal the loops.",
-    "footer": "Your data stays yours."
+    "footer": "Your data stays yours.",
+    "showcaseTitle": "See yourself more clearly",
+    "showcaseDesc": "AI-powered journaling that detects your patterns, diagnoses your thinking, and helps you break the loop.",
+    "showcaseJournal": "Your journals, analyzed for patterns",
+    "showcaseChat": "Guided sessions with Lao Mo",
+    "showcaseProfile": "Your cognition profile, always evolving"
   },
   "pricing": {
     "badge": "Pricing",

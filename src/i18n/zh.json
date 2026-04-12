@@ -309,7 +309,12 @@
     "featureCognitionDesc": "识别你的思维层级（L1-L4）、行为原型和隐藏的习惯回路。",
     "featureTree": "命运树",
     "featureTreeDesc": "看着你的人生选择长成一棵树，红线会把循环暴露出来。",
-    "footer": "你的数据始终属于你。"
+    "footer": "你的数据始终属于你。",
+    "showcaseTitle": "更清晰地看见自己",
+    "showcaseDesc": "AI 驱动的日记系统，识别你的行为模式，诊断你的思维结构，帮你打破循环。",
+    "showcaseJournal": "你的日记，被 AI 分析出模式",
+    "showcaseChat": "与老墨的引导式对话",
+    "showcaseProfile": "你的认知画像，持续进化"
   },
   "pricing": {
     "badge": "定价",
