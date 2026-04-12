@@ -132,43 +132,35 @@ export function DestinyTree({
     canvas.style.height = `${H}px`;
 
     /* ═══════════════════════════════════════════
-     * 1. Compute tree layout using D3
+     * 1. Compute tree layout in FIXED virtual space
+     *    Then auto-fit zoom to center in canvas
      * ═══════════════════════════════════════════ */
     const nodeMap = new Map(layout.nodes.map((n) => [n.id, n]));
-    const rootNode = layout.nodes.find((n) => !n.parentId) || layout.nodes[0];
 
     // Build d3 hierarchy from layout nodes
     const hierarchyData = d3.stratify<LayoutNode>()
       .id((d) => d.id)
       .parentId((d) => d.parentId)(layout.nodes);
 
-    // Compute layout — tree grows upward
-    const PADDING_X = 60;
-    const PADDING_TOP = 60;
-    const PADDING_BOTTOM = 80;
-    const treeW = W - PADDING_X * 2;
-    const treeH = H - PADDING_TOP - PADDING_BOTTOM;
+    // Use fixed virtual coordinate space — NOT tied to container width
+    const VIRTUAL_W = 800;
+    const VIRTUAL_H = 600;
+    const PADDING = 50;
 
     const treeLayout = d3
       .tree<LayoutNode>()
-      .size([treeW, treeH])
-      .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.8));
+      .size([VIRTUAL_W - PADDING * 2, VIRTUAL_H - PADDING * 2])
+      .separation((a, b) => (a.parent === b.parent ? 1.5 : 2.2));
 
     const root = treeLayout(hierarchyData);
 
     // Collect positioned nodes: flip Y so tree grows upward from bottom
     const positions = new Map<string, { x: number; y: number; depth: number; isLeaf: boolean }>();
-    const childCount = new Map<string, number>();
-
-    root.descendants().forEach((d) => {
-      const children = d.children?.length || 0;
-      childCount.set(d.data.id, children);
-    });
 
     root.descendants().forEach((d) => {
       positions.set(d.data.id, {
-        x: (d.x || 0) + PADDING_X,
-        y: H - PADDING_BOTTOM - (d.y || 0), // Flip Y: root at bottom
+        x: (d.x || 0) + PADDING,
+        y: VIRTUAL_H - PADDING - (d.y || 0), // Flip Y: root at bottom
         depth: d.depth,
         isLeaf: !d.children || d.children.length === 0,
       });
@@ -189,17 +181,37 @@ export function DestinyTree({
     const breakingSet = new Set(breakingNodeIds);
 
     /* ═══════════════════════════════════════════
-     * 2. Zoom & Pan
+     * 2. Auto-fit Zoom: scale & center tree in canvas
      * ═══════════════════════════════════════════ */
-    let transform = d3.zoomIdentity;
+    // Calculate bounding box of all nodes
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    positions.forEach((p) => {
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
+    });
+    const treeActualW = maxX - minX + 120; // extra padding for labels
+    const treeActualH = maxY - minY + 100;
+    const scaleX = W / treeActualW;
+    const scaleY = H / treeActualH;
+    const autoScale = Math.min(scaleX, scaleY, 1.5) * 0.88; // limit max zoom, add margin
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const initialTx = W / 2 - centerX * autoScale;
+    const initialTy = H / 2 - centerY * autoScale;
+
+    let transform = d3.zoomIdentity.translate(initialTx, initialTy).scale(autoScale);
     const canvasSelection = d3.select(canvas);
     const zoom = d3
       .zoom<HTMLCanvasElement, unknown>()
-      .scaleExtent([0.4, 2.5])
+      .scaleExtent([0.3, 3])
       .on('zoom', (event) => {
         transform = event.transform;
       });
     canvasSelection.call(zoom);
+    // Apply initial auto-fit transform
+    canvasSelection.call(zoom.transform, transform);
 
     /* ═══════════════════════════════════════════
      * 3. Render Loop
@@ -228,8 +240,8 @@ export function DestinyTree({
         const tNode = nodeMap.get(link.target);
         const sDepth = s.depth;
 
-        // Trunk gets thinner with depth
-        const thickness = Math.max(2, 12 - sDepth * 3.5);
+        // Trunk gets thinner with depth — bolder for visual impact
+        const thickness = Math.max(3, 16 - sDepth * 4);
 
         drawBranch(ctx, s.x, s.y, t.x, t.y, thickness, fadeIn * 0.9);
       });
@@ -260,7 +272,7 @@ export function DestinyTree({
         const color = NODE_COLORS[node.type] || '#71717a';
         const isRoot = node.depth === 0;
         const isLeaf = pos.isLeaf;
-        const r = isRoot ? 14 : isLeaf ? 10 : 8;
+        const r = isRoot ? 18 : isLeaf ? 12 : 10;
 
         const entryDelay = idx * 50;
         const nodeAlpha = Math.min(1, Math.max(0, (elapsed - entryDelay) / 500)) * fadeIn;
@@ -334,12 +346,12 @@ export function DestinyTree({
         }
 
         /* ─── Label ─── */
-        const label = node.title.length > 12 ? node.title.slice(0, 10) + '…' : node.title;
-        const fontSize = isRoot ? 13 : 11;
-        ctx.font = `${isRoot ? '600' : '500'} ${fontSize}px -apple-system, "Segoe UI", sans-serif`;
+        const label = node.title.length > 10 ? node.title.slice(0, 8) + '…' : node.title;
+        const fontSize = isRoot ? 14 : 12;
+        ctx.font = `${isRoot ? '600' : '500'} ${fontSize}px -apple-system, "Microsoft YaHei", "Segoe UI", sans-serif`;
         const tw = ctx.measureText(label).width;
-        const pillW = tw + 16;
-        const pillH = 22;
+        const pillW = tw + 20;
+        const pillH = 24;
         // Alternate label above/below for dense layers to prevent overlap
         const labelAbove = idx % 2 === 0;
         const labelY = labelAbove ? y - r - 16 : y + r + 16;
@@ -413,7 +425,7 @@ export function DestinyTree({
         if (!pos) continue;
         const dx = mx - pos.x;
         const dy = my - pos.y;
-        const hitR = (node.depth === 0 ? 18 : 14);
+        const hitR = (node.depth === 0 ? 22 : 16);
         if (dx * dx + dy * dy < hitR * hitR) {
           return node;
         }
