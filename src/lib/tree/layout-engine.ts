@@ -94,11 +94,13 @@ export function computeTreeLayout(
 
     const root = stratify(cleanedNodes);
 
-    // Compute tree layout
+    // Compute tree layout — wider spacing to prevent label overlap
+    const leafCount = root.leaves().length;
+    const neededWidth = Math.max(containerWidth, leafCount * 100);
     const treeLayout = d3
       .tree<LifeNode>()
-      .size([containerWidth - 100, containerHeight - 100])
-      .separation((a, b) => (a.parent === b.parent ? 1.5 : 2));
+      .size([neededWidth - 60, containerHeight - 80])
+      .separation((a, b) => (a.parent === b.parent ? 1.8 : 2.5));
 
     const layoutRoot = treeLayout(root);
 
@@ -142,7 +144,10 @@ export function computeTreeLayout(
     };
   } catch (error) {
     console.error('Tree layout error:', error);
-    return { nodes: [], links: [], patternLinks: [], width: containerWidth, height: containerHeight };
+    return {
+      nodes: [], links: [], patternLinks: [],
+      width: containerWidth, height: containerHeight,
+    };
   }
 }
 

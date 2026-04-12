@@ -6,8 +6,6 @@ import * as d3 from 'd3';
 import type {
   TreeLayoutResult,
   LayoutNode,
-  LayoutLink,
-  PatternLink,
 } from '@/lib/tree/layout-engine';
 import { formatLocalizedDate } from '@/lib/i18n/format-date';
 
@@ -16,18 +14,7 @@ import { formatLocalizedDate } from '@/lib/i18n/format-date';
 interface DestinyTreeProps {
   layout: TreeLayoutResult;
   onNodeClick?: (node: LayoutNode) => void;
-  /** Node IDs that just broke a loop — triggers red-ring-shatter animation */
   breakingNodeIds?: string[];
-}
-
-interface Particle {
-  nodeId: string;
-  angle: number;
-  radius: number;
-  speed: number;
-  size: number;
-  opacity: number;
-  color: string;
 }
 
 /* ─── Constants ─── */
@@ -39,37 +26,64 @@ const NODE_COLORS: Record<string, string> = {
   crisis: '#ef4444',
 };
 
-const STATUS_OPACITY: Record<string, number> = {
-  active: 1,
-  resolved: 0.6,
-  recurring: 1,
-};
-
-/** Number of ambient particles per node type */
-const PARTICLES_PER_NODE: Record<string, number> = {
-  milestone: 5,
-  insight: 4,
-  crisis: 3,
-  choice: 2,
-};
-
-const ENTRY_ANIMATION_DURATION = 800;
-const PARTICLE_LAYER_ID = 'particle-layer';
-
 /* ─── Helpers ─── */
 
-function createParticlesForNode(node: LayoutNode): Particle[] {
-  const count = PARTICLES_PER_NODE[node.type] ?? 2;
-  const color = NODE_COLORS[node.type] || '#71717a';
-  return Array.from({ length: count }, (_, i) => ({
-    nodeId: node.id,
-    angle: (Math.PI * 2 * i) / count + Math.random() * 0.5,
-    radius: 16 + Math.random() * 12,
-    speed: 0.003 + Math.random() * 0.004,
-    size: 1 + Math.random() * 1.5,
-    opacity: 0.3 + Math.random() * 0.4,
-    color,
-  }));
+/** Draw a curved thick branch from parent to child */
+function drawBranch(
+  ctx: CanvasRenderingContext2D,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  thickness: number,
+  alpha: number
+) {
+  const midY = (y1 + y2) / 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.bezierCurveTo(x1, midY, x2, midY, x2, y2);
+  ctx.strokeStyle = `rgba(120, 80, 50, ${alpha})`;
+  ctx.lineWidth = thickness;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Subtle inner glow for branch
+  if (thickness > 3) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.bezierCurveTo(x1, midY, x2, midY, x2, y2);
+    ctx.strokeStyle = `rgba(160, 120, 80, ${alpha * 0.3})`;
+    ctx.lineWidth = thickness * 0.4;
+    ctx.stroke();
+  }
+}
+
+/** Draw a leaf cluster around a node */
+function drawLeaves(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number,
+  color: string,
+  isLeaf: boolean,
+  elapsed: number,
+  nodeIndex: number
+) {
+  if (!isLeaf) return;
+
+  const leafCount = 5 + (nodeIndex % 3);
+  for (let i = 0; i < leafCount; i++) {
+    const angle = (Math.PI * 2 * i) / leafCount + Math.sin(elapsed * 0.0005 + nodeIndex) * 0.1;
+    const dist = 18 + Math.sin(elapsed * 0.001 + i * 2) * 3;
+    const lx = x + Math.cos(angle) * dist;
+    const ly = y + Math.sin(angle) * dist;
+    const size = 4 + Math.sin(elapsed * 0.002 + i) * 1;
+
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(angle + Math.PI / 4);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size, size * 1.6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = color + '30';
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 /* ─── Component ─── */
@@ -81,7 +95,7 @@ export function DestinyTree({
 }: DestinyTreeProps) {
   const locale = useLocale();
   const t = useTranslations('tree');
-  const svgRef = useRef<SVGSVGElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
   const [tooltip, setTooltip] = useState<{
@@ -90,7 +104,9 @@ export function DestinyTree({
     y: number;
   } | null>(null);
 
-  // Stable callback ref to avoid re-running D3 on every onNodeClick change
+  // Positioned nodes after layout
+  const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+
   const onNodeClickRef = useRef(onNodeClick);
   onNodeClickRef.current = onNodeClick;
 
@@ -100,400 +116,347 @@ export function DestinyTree({
   );
 
   useEffect(() => {
-    if (!svgRef.current || layout.nodes.length === 0) return;
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container || layout.nodes.length === 0) return;
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W = container.clientWidth;
+    const H = container.clientHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${H}px`;
 
     /* ═══════════════════════════════════════════
-     * 1. SVG Defs — Glow Filters + Pulse Anim
+     * 1. Compute tree layout using D3
      * ═══════════════════════════════════════════ */
-    const defs = svg.append('defs');
+    const nodeMap = new Map(layout.nodes.map((n) => [n.id, n]));
+    const rootNode = layout.nodes.find((n) => !n.parentId) || layout.nodes[0];
 
-    // Glow filter per node color
-    Object.entries(NODE_COLORS).forEach(([type, color]) => {
-      const filter = defs
-        .append('filter')
-        .attr('id', `glow-${type}`)
-        .attr('x', '-50%')
-        .attr('y', '-50%')
-        .attr('width', '200%')
-        .attr('height', '200%');
+    // Build d3 hierarchy from layout nodes
+    const hierarchyData = d3.stratify<LayoutNode>()
+      .id((d) => d.id)
+      .parentId((d) => d.parentId)(layout.nodes);
 
-      filter
-        .append('feGaussianBlur')
-        .attr('in', 'SourceGraphic')
-        .attr('stdDeviation', 4)
-        .attr('result', 'blur');
+    // Compute layout — tree grows upward
+    const PADDING_X = 60;
+    const PADDING_TOP = 60;
+    const PADDING_BOTTOM = 80;
+    const treeW = W - PADDING_X * 2;
+    const treeH = H - PADDING_TOP - PADDING_BOTTOM;
 
-      filter
-        .append('feFlood')
-        .attr('flood-color', color)
-        .attr('flood-opacity', 0.6)
-        .attr('result', 'color');
+    const treeLayout = d3
+      .tree<LayoutNode>()
+      .size([treeW, treeH])
+      .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.8));
 
-      filter
-        .append('feComposite')
-        .attr('in', 'color')
-        .attr('in2', 'blur')
-        .attr('operator', 'in')
-        .attr('result', 'colorBlur');
+    const root = treeLayout(hierarchyData);
 
-      const merge = filter.append('feMerge');
-      merge.append('feMergeNode').attr('in', 'colorBlur');
-      merge.append('feMergeNode').attr('in', 'SourceGraphic');
+    // Collect positioned nodes: flip Y so tree grows upward from bottom
+    const positions = new Map<string, { x: number; y: number; depth: number; isLeaf: boolean }>();
+    const childCount = new Map<string, number>();
+
+    root.descendants().forEach((d) => {
+      const children = d.children?.length || 0;
+      childCount.set(d.data.id, children);
     });
 
-    // Recurring-node pulse filter (red)
-    const pulseFilter = defs
-      .append('filter')
-      .attr('id', 'glow-pulse')
-      .attr('x', '-80%')
-      .attr('y', '-80%')
-      .attr('width', '260%')
-      .attr('height', '260%');
-
-    pulseFilter
-      .append('feGaussianBlur')
-      .attr('in', 'SourceGraphic')
-      .attr('stdDeviation', 6)
-      .attr('result', 'blur');
-
-    pulseFilter
-      .append('feFlood')
-      .attr('flood-color', '#ef4444')
-      .attr('flood-opacity', 0.5)
-      .attr('result', 'color');
-
-    pulseFilter
-      .append('feComposite')
-      .attr('in', 'color')
-      .attr('in2', 'blur')
-      .attr('operator', 'in')
-      .attr('result', 'colorBlur');
-
-    const pulseMerge = pulseFilter.append('feMerge');
-    pulseMerge.append('feMergeNode').attr('in', 'colorBlur');
-    pulseMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-
-    // CSS animations via <style> element
-    defs.append('style').text(`
-      @keyframes pulse-ring {
-        0%, 100% { opacity: 0.4; r: 14; }
-        50% { opacity: 0.15; r: 20; }
-      }
-      @keyframes node-entry {
-        from { transform: scale(0); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-      @keyframes shatter-ring {
-        0% { opacity: 0.8; r: 14; stroke-width: 3; }
-        40% { opacity: 1; r: 28; stroke-width: 1; }
-        100% { opacity: 0; r: 40; stroke-width: 0; }
-      }
-      .pulse-ring {
-        animation: pulse-ring 2.5s ease-in-out infinite;
-      }
-      .node-entry {
-        transform-origin: center;
-        animation: node-entry ${ENTRY_ANIMATION_DURATION}ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-      }
-      .shatter-ring {
-        animation: shatter-ring 1.2s ease-out forwards;
-      }
-    `);
-
-    const g = svg.append('g').attr('class', 'tree-content');
-
-    /* ═══════════════════════════════════════════
-     * 2. Zoom/Pan
-     * ═══════════════════════════════════════════ */
-    const zoom = d3
-      .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.3, 3])
-      .on('zoom', (event) => {
-        g.attr('transform', event.transform);
+    root.descendants().forEach((d) => {
+      positions.set(d.data.id, {
+        x: (d.x || 0) + PADDING_X,
+        y: H - PADDING_BOTTOM - (d.y || 0), // Flip Y: root at bottom
+        depth: d.depth,
+        isLeaf: !d.children || d.children.length === 0,
       });
+    });
 
-    svg.call(zoom);
+    // Store for hit testing
+    const posMap = new Map<string, { x: number; y: number }>();
+    positions.forEach((v, k) => posMap.set(k, { x: v.x, y: v.y }));
+    positionsRef.current = posMap;
 
-    /* ═══════════════════════════════════════════
-     * 3. Links — Parent-child (solid) + Pattern (red dashed)
-     * ═══════════════════════════════════════════ */
-    // Parent-child links with gradient opacity
-    g.selectAll('.tree-link')
-      .data(layout.links)
-      .enter()
-      .append('path')
-      .attr('class', 'tree-link')
-      .attr('d', (d: LayoutLink) => {
-        const source = layout.nodes.find((n) => n.id === d.sourceId);
-        const target = layout.nodes.find((n) => n.id === d.targetId);
-        if (!source || !target) return '';
-        return `M${source.x},${source.y} C${source.x},${(source.y + target.y) / 2} ${target.x},${(source.y + target.y) / 2} ${target.x},${target.y}`;
-      })
-      .attr('fill', 'none')
-      .attr('stroke', '#3f3f46')
-      .attr('stroke-width', 2)
-      .attr('opacity', 0)
-      .transition()
-      .duration(ENTRY_ANIMATION_DURATION)
-      .delay((_, i) => i * 30)
-      .attr('opacity', 0.8);
+    // Collect links
+    const links: { source: string; target: string }[] = [];
+    root.links().forEach((l) => {
+      links.push({ source: l.source.data.id, target: l.target.data.id });
+    });
 
-    // Pattern links (red dashed — recurring pattern connections)
-    g.selectAll('.pattern-link')
-      .data(layout.patternLinks)
-      .enter()
-      .append('line')
-      .attr('class', 'pattern-link')
-      .attr(
-        'x1',
-        (d: PatternLink) =>
-          layout.nodes.find((n) => n.id === d.sourceId)?.x || 0
-      )
-      .attr(
-        'y1',
-        (d: PatternLink) =>
-          layout.nodes.find((n) => n.id === d.sourceId)?.y || 0
-      )
-      .attr(
-        'x2',
-        (d: PatternLink) =>
-          layout.nodes.find((n) => n.id === d.targetId)?.x || 0
-      )
-      .attr(
-        'y2',
-        (d: PatternLink) =>
-          layout.nodes.find((n) => n.id === d.targetId)?.y || 0
-      )
-      .attr('stroke', '#ef4444')
-      .attr('stroke-width', 1.5)
-      .attr('stroke-dasharray', '6,4')
-      .attr('opacity', 0)
-      .transition()
-      .duration(600)
-      .delay(ENTRY_ANIMATION_DURATION)
-      .attr('opacity', 0.6);
+    // Breakingset
+    const breakingSet = new Set(breakingNodeIds);
 
     /* ═══════════════════════════════════════════
-     * 4. Particle Layer (ambient floating particles)
+     * 2. Zoom & Pan
      * ═══════════════════════════════════════════ */
-    const particleGroup = g.append('g').attr('id', PARTICLE_LAYER_ID);
+    let transform = d3.zoomIdentity;
+    const canvasSelection = d3.select(canvas);
+    const zoom = d3
+      .zoom<HTMLCanvasElement, unknown>()
+      .scaleExtent([0.4, 2.5])
+      .on('zoom', (event) => {
+        transform = event.transform;
+      });
+    canvasSelection.call(zoom);
 
-    const allParticles: Particle[] = layout.nodes.flatMap(createParticlesForNode);
-
-    const particleElements = particleGroup
-      .selectAll('.particle')
-      .data(allParticles)
-      .enter()
-      .append('circle')
-      .attr('class', 'particle')
-      .attr('r', (d) => d.size)
-      .attr('fill', (d) => d.color)
-      .attr('opacity', 0);
-
-    // Node lookup for particle positioning
-    const nodeById = new Map(layout.nodes.map((n) => [n.id, n]));
-
-    // Particle animation loop
+    /* ═══════════════════════════════════════════
+     * 3. Render Loop
+     * ═══════════════════════════════════════════ */
     let startTime: number | null = null;
 
-    function animateParticles(timestamp: number) {
+    function render(timestamp: number) {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
+      const fadeIn = Math.min(1, elapsed / 1000);
 
-      // Fade in particles after entry animation
-      const particleFadeIn = Math.min(
-        1,
-        Math.max(0, (elapsed - ENTRY_ANIMATION_DURATION) / 600)
-      );
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
 
-      particleElements.each(function (d) {
-        const node = nodeById.get(d.nodeId);
-        if (!node) return;
+      ctx.translate(transform.x, transform.y);
+      ctx.scale(transform.k, transform.k);
 
-        const currentAngle = d.angle + elapsed * d.speed;
-        const wobble = Math.sin(elapsed * 0.001 + d.angle * 3) * 3;
-        const cx = node.x + Math.cos(currentAngle) * (d.radius + wobble);
-        const cy = node.y + Math.sin(currentAngle) * (d.radius + wobble);
+      /* ─── Draw Branches (thick trunk → thin branches) ─── */
+      links.forEach((link) => {
+        const s = positions.get(link.source);
+        const t = positions.get(link.target);
+        if (!s || !t) return;
 
-        d3.select(this)
-          .attr('cx', cx)
-          .attr('cy', cy)
-          .attr('opacity', d.opacity * particleFadeIn);
+        const sNode = nodeMap.get(link.source);
+        const tNode = nodeMap.get(link.target);
+        const sDepth = s.depth;
+
+        // Trunk gets thinner with depth
+        const thickness = Math.max(2, 12 - sDepth * 3.5);
+
+        drawBranch(ctx, s.x, s.y, t.x, t.y, thickness, fadeIn * 0.9);
       });
 
-      animFrameRef.current = requestAnimationFrame(animateParticles);
-    }
+      /* ─── Draw Pattern Links (red constellation lines) ─── */
+      layout.patternLinks.forEach((pl) => {
+        const s = positions.get(pl.sourceId);
+        const t = positions.get(pl.targetId);
+        if (!s || !t) return;
 
-    animFrameRef.current = requestAnimationFrame(animateParticles);
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(t.x, t.y);
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = `rgba(239, 68, 68, ${0.4 * fadeIn})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
 
-    /* ═══════════════════════════════════════════
-     * 5. Nodes — Glow + Entry Animation + Pulse
-     * ═══════════════════════════════════════════ */
-    const nodeGroups = g
-      .selectAll('.tree-node')
-      .data(layout.nodes)
-      .enter()
-      .append('g')
-      .attr('class', () => 'tree-node node-entry')
-      .attr('transform', (d: LayoutNode) => `translate(${d.x},${d.y})`)
-      .style('cursor', 'pointer')
-      .style('animation-delay', (d: LayoutNode, i: number) => `${i * 60}ms`);
+      /* ─── Draw Nodes ─── */
+      layout.nodes.forEach((node, idx) => {
+        const pos = positions.get(node.id);
+        if (!pos) return;
 
-    // Glow halo (behind node circle)
-    nodeGroups
-      .append('circle')
-      .attr('class', 'glow-halo')
-      .attr('r', (d: LayoutNode) => (d.depth === 0 ? 20 : 14))
-      .attr('fill', (d: LayoutNode) => NODE_COLORS[d.type] || '#71717a')
-      .attr('opacity', 0.15)
-      .attr('filter', (d: LayoutNode) => `url(#glow-${d.type})`);
+        const x = pos.x;
+        const y = pos.y;
+        const color = NODE_COLORS[node.type] || '#71717a';
+        const isRoot = node.depth === 0;
+        const isLeaf = pos.isLeaf;
+        const r = isRoot ? 14 : isLeaf ? 10 : 8;
 
-    // Recurring pulse ring
-    nodeGroups
-      .filter((d: LayoutNode) => d.status === 'recurring')
-      .append('circle')
-      .attr('class', 'pulse-ring')
-      .attr('r', 14)
-      .attr('fill', 'none')
-      .attr('stroke', '#ef4444')
-      .attr('stroke-width', 1.5)
-      .attr('filter', 'url(#glow-pulse)');
+        const entryDelay = idx * 50;
+        const nodeAlpha = Math.min(1, Math.max(0, (elapsed - entryDelay) / 500)) * fadeIn;
+        if (nodeAlpha <= 0) return;
 
-    // Break-loop shatter effect (for nodes that just broke a pattern)
-    const breakingSet = new Set(breakingNodeIds);
-    nodeGroups
-      .filter((d: LayoutNode) => breakingSet.has(d.id))
-      .append('circle')
-      .attr('class', 'shatter-ring')
-      .attr('r', 14)
-      .attr('fill', 'none')
-      .attr('stroke', '#ef4444')
-      .attr('stroke-width', 3);
+        ctx.globalAlpha = nodeAlpha;
 
-    // Main node circles
-    nodeGroups
-      .append('circle')
-      .attr('class', 'node-core')
-      .attr('r', 0) // start at 0 for entry animation
-      .attr('fill', (d: LayoutNode) => NODE_COLORS[d.type] || '#71717a')
-      .attr('opacity', (d: LayoutNode) => STATUS_OPACITY[d.status] || 1)
-      .attr('stroke', (d: LayoutNode) =>
-        d.status === 'recurring' ? '#ef4444' : 'transparent'
-      )
-      .attr('stroke-width', (d: LayoutNode) =>
-        d.status === 'recurring' ? 2.5 : 0
-      )
-      .transition()
-      .duration(500)
-      .delay((d: LayoutNode, i: number) => i * 60)
-      .ease(d3.easeBackOut.overshoot(1.7))
-      .attr('r', (d: LayoutNode) => (d.depth === 0 ? 12 : 8));
+        // Draw leaves around leaf nodes
+        drawLeaves(ctx, x, y, color, isLeaf, elapsed, idx);
 
-    // Node labels
-    nodeGroups
-      .append('text')
-      .attr('dy', -18)
-      .attr('text-anchor', 'middle')
-      .attr('fill', '#a1a1aa')
-      .attr('font-size', '11px')
-      .attr('opacity', 0)
-      .text((d: LayoutNode) =>
-        d.title.length > 20 ? d.title.slice(0, 18) + '...' : d.title
-      )
-      .transition()
-      .duration(400)
-      .delay((_, i) => i * 60 + 300)
-      .attr('opacity', 1);
+        // Outer glow
+        const glow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 3);
+        glow.addColorStop(0, color + '50');
+        glow.addColorStop(1, color + '00');
+        ctx.beginPath();
+        ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
 
-    /* ═══════════════════════════════════════════
-     * 6. Hover & Click Interactions
-     * ═══════════════════════════════════════════ */
-    nodeGroups
-      .on('mouseenter', function (event: MouseEvent, d: LayoutNode) {
-        const group = d3.select(this);
-        // Enlarge core circle
-        group
-          .select('.node-core')
-          .transition()
-          .duration(200)
-          .attr('r', d.depth === 0 ? 15 : 11);
-        // Brighten glow
-        group
-          .select('.glow-halo')
-          .transition()
-          .duration(200)
-          .attr('opacity', 0.35)
-          .attr('r', d.depth === 0 ? 26 : 20);
-
-        const rect = svgRef.current?.getBoundingClientRect();
-        if (rect) {
-          setTooltip({
-            node: d,
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
-          });
+        // Recurring pulse ring
+        if (node.status === 'recurring') {
+          const pulseR = r + 4 + Math.sin(elapsed * 0.003) * 3;
+          ctx.beginPath();
+          ctx.arc(x, y, pulseR, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.5;
+          ctx.globalAlpha = nodeAlpha * (0.3 + Math.sin(elapsed * 0.003) * 0.2);
+          ctx.stroke();
+          ctx.globalAlpha = nodeAlpha;
         }
-      })
-      .on('mouseleave', function (_event: MouseEvent, d: LayoutNode) {
-        const group = d3.select(this);
-        group
-          .select('.node-core')
-          .transition()
-          .duration(200)
-          .attr('r', d.depth === 0 ? 12 : 8);
-        group
-          .select('.glow-halo')
-          .transition()
-          .duration(200)
-          .attr('opacity', 0.15)
-          .attr('r', d.depth === 0 ? 20 : 14);
 
-        setTooltip(null);
-      })
-      .on('click', (_event: MouseEvent, d: LayoutNode) => {
-        handleNodeClick(d);
+        // Breaking shatter
+        if (breakingSet.has(node.id)) {
+          const p = Math.min(1, elapsed / 1500);
+          const sr = r + p * 25;
+          ctx.beginPath();
+          ctx.arc(x, y, sr, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3 * (1 - p);
+          ctx.globalAlpha = (1 - p) * nodeAlpha;
+          ctx.stroke();
+          ctx.globalAlpha = nodeAlpha;
+        }
+
+        // Core circle
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = nodeAlpha * (node.status === 'resolved' ? 0.65 : 1);
+        ctx.fill();
+
+        // Inner highlight (3D feel)
+        const hl = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, 0, x, y, r);
+        hl.addColorStop(0, 'rgba(255,255,255,0.45)');
+        hl.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = hl;
+        ctx.globalAlpha = nodeAlpha * 0.5;
+        ctx.fill();
+
+        ctx.globalAlpha = nodeAlpha;
+
+        // Recurring red ring
+        if (node.status === 'recurring') {
+          ctx.beginPath();
+          ctx.arc(x, y, r + 1, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        /* ─── Label ─── */
+        const label = node.title.length > 12 ? node.title.slice(0, 10) + '…' : node.title;
+        const fontSize = isRoot ? 13 : 11;
+        ctx.font = `${isRoot ? '600' : '500'} ${fontSize}px -apple-system, "Segoe UI", sans-serif`;
+        const tw = ctx.measureText(label).width;
+        const pillW = tw + 16;
+        const pillH = 22;
+        // Alternate label above/below for dense layers to prevent overlap
+        const labelAbove = idx % 2 === 0;
+        const labelY = labelAbove ? y - r - 16 : y + r + 16;
+
+        // Pill background
+        ctx.globalAlpha = nodeAlpha * 0.9;
+        ctx.beginPath();
+        ctx.roundRect(x - pillW / 2, labelY - pillH / 2, pillW, pillH, 11);
+        ctx.fillStyle = 'rgba(15, 16, 20, 0.88)';
+        ctx.fill();
+        ctx.strokeStyle = color + '55';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Text
+        ctx.globalAlpha = nodeAlpha;
+        ctx.fillStyle = '#e4e4e7';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, x, labelY);
+
+        // Type indicator dot in label
+        ctx.beginPath();
+        ctx.arc(x - tw / 2 - 5, labelY, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
       });
 
-    /* ═══════════════════════════════════════════
-     * 7. Center Tree
-     * ═══════════════════════════════════════════ */
-    const bounds = g.node()?.getBBox();
-    if (bounds && containerRef.current) {
-      const containerWidth = containerRef.current.clientWidth;
-      const containerHeight = containerRef.current.clientHeight;
-      const scale = Math.min(
-        containerWidth / (bounds.width + 100),
-        containerHeight / (bounds.height + 100),
-        1.5
-      );
-      const tx =
-        containerWidth / 2 - (bounds.x + bounds.width / 2) * scale;
-      const ty =
-        containerHeight / 2 - (bounds.y + bounds.height / 2) * scale;
+      /* ─── Ambient sparkle particles ─── */
+      const sparkleAlpha = Math.min(1, Math.max(0, (elapsed - 600) / 800));
+      if (sparkleAlpha > 0) {
+        layout.nodes.forEach((node, i) => {
+          const pos = positions.get(node.id);
+          if (!pos) return;
+          const color = NODE_COLORS[node.type] || '#71717a';
+          const count = node.type === 'milestone' ? 3 : 2;
 
-      svg.call(
-        zoom.transform,
-        d3.zoomIdentity.translate(tx, ty).scale(scale)
-      );
+          for (let j = 0; j < count; j++) {
+            const angle = (Math.PI * 2 * j) / count + elapsed * 0.0006 * (1 + j * 0.3);
+            const dist = 20 + Math.sin(elapsed * 0.001 + j + i) * 4;
+            const px = pos.x + Math.cos(angle) * dist;
+            const py = pos.y + Math.sin(angle) * dist;
+
+            ctx.beginPath();
+            ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = sparkleAlpha * (0.25 + Math.sin(elapsed * 0.003 + j) * 0.15);
+            ctx.fill();
+          }
+        });
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.restore();
+
+      animFrameRef.current = requestAnimationFrame(render);
     }
 
+    animFrameRef.current = requestAnimationFrame(render);
+
     /* ═══════════════════════════════════════════
-     * 8. Cleanup
+     * 4. Mouse interactions
      * ═══════════════════════════════════════════ */
+    function getNodeAt(clientX: number, clientY: number): LayoutNode | null {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (clientX - rect.left - transform.x) / transform.k;
+      const my = (clientY - rect.top - transform.y) / transform.k;
+
+      for (const node of layout.nodes) {
+        const pos = positions.get(node.id);
+        if (!pos) continue;
+        const dx = mx - pos.x;
+        const dy = my - pos.y;
+        const hitR = (node.depth === 0 ? 18 : 14);
+        if (dx * dx + dy * dy < hitR * hitR) {
+          return node;
+        }
+      }
+      return null;
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      const node = getNodeAt(e.clientX, e.clientY);
+      if (node) {
+        canvas.style.cursor = 'pointer';
+        const rect = canvas.getBoundingClientRect();
+        setTooltip({
+          node,
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+      } else {
+        canvas.style.cursor = 'grab';
+        setTooltip(null);
+      }
+    }
+
+    function onClick(e: MouseEvent) {
+      const node = getNodeAt(e.clientX, e.clientY);
+      if (node) handleNodeClick(node);
+    }
+
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('click', onClick);
+
     return () => {
       cancelAnimationFrame(animFrameRef.current);
-      svg.on('.zoom', null);
-      svg.selectAll('*').remove();
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('click', onClick);
+      canvasSelection.on('.zoom', null);
     };
   }, [layout, breakingNodeIds, handleNodeClick]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full">
-      <svg
-        ref={svgRef}
+      <canvas
+        ref={canvasRef}
         className="h-full w-full"
         style={{ background: 'transparent' }}
       />

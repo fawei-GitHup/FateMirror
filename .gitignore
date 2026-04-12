@@ -49,3 +49,6 @@ next-env.d.ts
 # doc binaries
 *.docx
 *.zip
+
+.vercel
+.env*.local

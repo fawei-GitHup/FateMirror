@@ -73,7 +73,7 @@ export default function TreePage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 120px)' }}>
       <div className="shrink-0 px-4 py-3 md:px-6">
         <div className="flex items-center justify-between">
           <div>

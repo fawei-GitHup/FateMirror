@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 
 function JournalMockup() {
   const entries = [
-    { title: 'Why do I always say yes?', date: 'Apr 8', tags: ['exhaustion', 'boundaries', 'work'], loops: 2, mode: 'freewrite' },
-    { title: 'The conversation I keep avoiding', date: 'Apr 9', tags: ['fear', 'family', 'career'], loops: 1, mode: 'guided' },
-    { title: 'Breaking the midnight scroll', date: 'Apr 10', tags: ['anxiety', 'habits', 'hope'], loops: 3, mode: 'freewrite' },
-    { title: 'The pattern behind my anger', date: 'Apr 11', tags: ['anger', 'identity', 'clarity'], loops: 2, mode: 'guided' },
+    { title: '回忆海南演唱会', date: '4月12日', tags: ['怀念', '伤感', '记忆'], loops: 0, mode: 'freewrite' },
+    { title: '愤怒背后的模式', date: '4月11日', tags: ['愤怒', '身份', '领悟'], loops: 2, mode: 'guided' },
+    { title: '感恩练习第七天', date: '4月11日', tags: ['感恩', '成长', '习惯'], loops: 0, mode: 'freewrite' },
+    { title: '打破深夜刷手机', date: '4月10日', tags: ['焦虑', '习惯', '希望'], loops: 3, mode: 'guided' },
   ];
 
   return (
@@ -60,8 +60,8 @@ function ChatMockup() {
       {/* Mock header */}
       <div className="flex items-center gap-2 border-b border-white/5 px-5 py-3">
         <MessageCircle className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground">Guided Session</span>
-        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] text-green-400">Live</span>
+        <span className="text-sm font-medium text-foreground">引导式对话</span>
+        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] text-green-400">进行中</span>
       </div>
       {/* Mock conversation */}
       <div className="space-y-4 p-5">
@@ -72,7 +72,7 @@ function ChatMockup() {
           </div>
           <div className="rounded-xl rounded-tl-sm bg-white/[0.04] px-4 py-2.5">
             <p className="text-[12px] leading-relaxed text-foreground/80">
-              Hey, nice to meet you. What&apos;s been on your mind lately? Big or small, let&apos;s talk about it.
+              嘿，最近有什么一直在你脑海里转的事情吗？大事小事都行，聊聊看。
             </p>
           </div>
         </div>
@@ -80,7 +80,7 @@ function ChatMockup() {
         <div className="flex justify-end">
           <div className="rounded-xl rounded-tr-sm bg-primary/10 px-4 py-2.5">
             <p className="text-[12px] leading-relaxed text-foreground/80">
-              I keep saying yes to everything at work and I&apos;m burned out...
+              工作上什么都答应，感觉快被掏空了...
             </p>
           </div>
         </div>
@@ -91,7 +91,7 @@ function ChatMockup() {
           </div>
           <div className="rounded-xl rounded-tl-sm bg-white/[0.04] px-4 py-2.5">
             <p className="text-[12px] leading-relaxed text-foreground/80">
-              &ldquo;Saying yes to everything&rdquo; — I&apos;m curious, when you say yes, what are you actually afraid would happen if you said no?
+              「什么都答应」——我好奇的是，当你说&ldquo;好&rdquo;的时候，你真正害怕的是说&ldquo;不&rdquo;之后会发生什么？
             </p>
           </div>
         </div>
@@ -102,10 +102,10 @@ function ChatMockup() {
 
 function ProfileMockup() {
   const behaviors = [
-    { name: 'Prover', score: 82, color: 'bg-purple-400' },
-    { name: 'People-Pleaser', score: 68, color: 'bg-blue-400' },
-    { name: 'Controller', score: 45, color: 'bg-cyan-400' },
-    { name: 'Avoider', score: 35, color: 'bg-emerald-400' },
+    { name: '证明者', score: 82, color: '#C084FC' },
+    { name: '讨好者', score: 68, color: '#60A5FA' },
+    { name: '控制者', score: 45, color: '#22D3EE' },
+    { name: '回避者', score: 35, color: '#34D399' },
   ];
 
   return (
@@ -113,15 +113,15 @@ function ProfileMockup() {
       {/* Mock header */}
       <div className="flex items-center gap-2 border-b border-white/5 px-5 py-3">
         <BarChart3 className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground">Cognition Profile</span>
-        <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-400">Lv.3</span>
+        <span className="text-sm font-medium text-foreground">认知画像</span>
+        <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-400">Lv.4</span>
       </div>
       <div className="space-y-4 p-5">
         {/* Thinking Level */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-muted-foreground">Thinking Level</span>
-            <span className="text-[11px] font-semibold text-primary">L3 Systemic</span>
+            <span className="text-[11px] font-medium text-muted-foreground">思维维度</span>
+            <span className="text-[11px] font-semibold text-primary">L3 系统性</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
             <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-primary/60 to-primary" />
@@ -129,13 +129,13 @@ function ProfileMockup() {
         </div>
         {/* Behavior Archetypes */}
         <div className="space-y-2.5">
-          <span className="text-[11px] font-medium text-muted-foreground">Behavior Archetypes</span>
+          <span className="text-[11px] font-medium text-muted-foreground">行为原型</span>
           {behaviors.map((b) => (
             <div key={b.name} className="flex items-center gap-3">
               <span className="w-24 text-[11px] text-foreground/70">{b.name}</span>
               <div className="flex-1">
                 <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
-                  <div className={`h-full rounded-full ${b.color}/60`} style={{ width: `${b.score}%` }} />
+                  <div className="h-full rounded-full" style={{ width: `${b.score}%`, backgroundColor: b.color, opacity: 0.7 }} />
                 </div>
               </div>
               <span className="w-8 text-right text-[10px] text-muted-foreground">{b.score}%</span>
@@ -144,11 +144,114 @@ function ProfileMockup() {
         </div>
         {/* Pattern detected */}
         <div className="rounded-lg border border-amber-400/10 bg-amber-400/[0.03] p-3">
-          <p className="text-[11px] font-medium text-amber-400/80">🔄 Pattern Detected</p>
+          <p className="text-[11px] font-medium text-amber-400/80">🔄 模式发现</p>
           <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
-            &ldquo;Every yes to them is a no to myself&rdquo; — seen 3 times in 5 days
+            「每次对别人说好，就是对自己说不」— 5天内出现3次
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TreeMockup() {
+  /* Mini SVG-based tree visualization for the landing page */
+  const nodes = [
+    { x: 200, y: 280, r: 10, color: '#3B82F6', label: '职业十字路口' },
+    { x: 120, y: 220, r: 7, color: '#22C55E', label: '讨好型人格' },
+    { x: 280, y: 220, r: 7, color: '#EF4444', label: '愤怒即威胁' },
+    { x: 70, y: 155, r: 6, color: '#A855F7', label: '无法说不' },
+    { x: 155, y: 155, r: 6, color: '#22C55E', label: '第一次说不' },
+    { x: 240, y: 155, r: 6, color: '#3B82F6', label: '重新定义成功' },
+    { x: 320, y: 155, r: 6, color: '#A855F7', label: '自我接纳' },
+    { x: 40, y: 95, r: 5, color: '#A855F7', label: '内疚螺旋' },
+    { x: 100, y: 95, r: 5, color: '#22C55E', label: '数字排毒' },
+    { x: 185, y: 95, r: 5, color: '#3B82F6', label: '家庭对质' },
+    { x: 270, y: 95, r: 5, color: '#EF4444', label: '职场面具' },
+    { x: 340, y: 95, r: 5, color: '#22C55E', label: '放下完美' },
+    { x: 140, y: 45, r: 4, color: '#3B82F6', label: '写给父亲' },
+    { x: 260, y: 45, r: 4, color: '#22C55E', label: '感恩转变' },
+  ];
+
+  const branches: [number, number, number, number][] = [
+    [200, 280, 120, 220], [200, 280, 280, 220],
+    [120, 220, 70, 155], [120, 220, 155, 155],
+    [280, 220, 240, 155], [280, 220, 320, 155],
+    [70, 155, 40, 95], [70, 155, 100, 95],
+    [155, 155, 185, 95],
+    [240, 155, 270, 95],
+    [320, 155, 340, 95],
+    [185, 95, 140, 45],
+    [270, 95, 260, 45],
+  ];
+
+  return (
+    <div className="card-glow overflow-hidden rounded-2xl">
+      <div className="flex items-center gap-2 border-b border-white/5 px-5 py-3">
+        <TreePine className="h-4 w-4 text-primary" />
+        <span className="text-sm font-medium text-foreground">命运树</span>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">20 节点</span>
+      </div>
+      <div className="flex items-center justify-center p-4">
+        <svg viewBox="0 0 400 320" className="h-[260px] w-full">
+          {/* Branches */}
+          {branches.map(([x1, y1, x2, y2], i) => {
+            const midY = (y1 + y2) / 2;
+            const thickness = Math.max(1.5, 5 - i * 0.3);
+            return (
+              <path
+                key={`b${i}`}
+                d={`M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`}
+                stroke="rgba(120,80,50,0.7)"
+                strokeWidth={thickness}
+                strokeLinecap="round"
+                fill="none"
+              />
+            );
+          })}
+          {/* Glow circles */}
+          {nodes.map((n, i) => (
+            <g key={i}>
+              <circle cx={n.x} cy={n.y} r={n.r * 2.5} fill={n.color} opacity={0.15} />
+              <circle cx={n.x} cy={n.y} r={n.r} fill={n.color} opacity={0.9} />
+              {/* Label */}
+              <rect
+                x={n.x - n.label.length * 5}
+                y={i % 2 === 0 ? n.y - n.r - 18 : n.y + n.r + 6}
+                width={n.label.length * 10 + 8}
+                height={14}
+                rx={4}
+                fill="rgba(0,0,0,0.6)"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth={0.5}
+              />
+              <text
+                x={n.x + 4}
+                y={i % 2 === 0 ? n.y - n.r - 8 : n.y + n.r + 16}
+                textAnchor="middle"
+                fill="rgba(255,255,255,0.85)"
+                fontSize={8}
+                fontFamily="system-ui"
+              >
+                {n.label}
+              </text>
+            </g>
+          ))}
+          {/* Legend */}
+          <g transform="translate(10, 305)">
+            {[
+              { color: '#22C55E', label: '里程碑' },
+              { color: '#3B82F6', label: '决策点' },
+              { color: '#A855F7', label: '顿悟' },
+              { color: '#EF4444', label: '危机' },
+            ].map((item, i) => (
+              <g key={i} transform={`translate(${i * 85}, 0)`}>
+                <circle cx={5} cy={0} r={3} fill={item.color} />
+                <text x={12} y={3} fill="rgba(255,255,255,0.5)" fontSize={8}>{item.label}</text>
+              </g>
+            ))}
+          </g>
+        </svg>
       </div>
     </div>
   );
@@ -242,10 +345,16 @@ export default async function LandingPage() {
           </div>
         </div>
 
-        {/* Row 2: Profile (centered) */}
-        <div className="mx-auto mt-6 max-w-md">
-          <ProfileMockup />
-          <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseProfile')}</p>
+        {/* Row 2: Tree + Profile */}
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div>
+            <TreeMockup />
+            <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseTree')}</p>
+          </div>
+          <div>
+            <ProfileMockup />
+            <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseProfile')}</p>
+          </div>
         </div>
       </section>
 
