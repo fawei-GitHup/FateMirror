@@ -481,5 +481,17 @@
   "language": {
     "english": "English",
     "chinese": "Chinese"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "rateExperience": "Rate your experience",
+    "feedbackType": "Feedback type",
+    "bug": "Bug Report",
+    "feature": "Feature Request",
+    "general": "General Feedback",
+    "message": "Tell us more...",
+    "submit": "Submit",
+    "success": "Thank you for your feedback!",
+    "close": "Close"
   }
 }

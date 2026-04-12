@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
@@ -20,16 +21,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .single();
 
   return (
-    <AppShell
-      user={{
-        id: user.id,
-        email: user.email || '',
-        displayName: profile?.display_name || user.email || 'User',
-        level: profile?.level || 0,
-        levelName: profile?.level_name || 'Sleeper',
-      }}
-    >
-      {children}
-    </AppShell>
+    <>
+      <AppShell
+        user={{
+          id: user.id,
+          email: user.email || '',
+          displayName: profile?.display_name || user.email || 'User',
+          level: profile?.level || 0,
+          levelName: profile?.level_name || 'Sleeper',
+        }}
+      >
+        {children}
+      </AppShell>
+      <FeedbackWidget />
+    </>
   );
 }
