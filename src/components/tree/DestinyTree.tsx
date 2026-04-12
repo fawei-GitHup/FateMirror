@@ -116,12 +116,16 @@ export function DestinyTree({
   );
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvasRaw = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container || layout.nodes.length === 0) return;
+    if (!canvasRaw || !container || layout.nodes.length === 0) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const ctxRaw = canvasRaw.getContext('2d');
+    if (!ctxRaw) return;
+
+    // Re-assign after guards to narrow types for nested closures
+    const canvas = canvasRaw;
+    const ctx = ctxRaw;
 
     const dpr = window.devicePixelRatio || 1;
     const W = container.clientWidth;
