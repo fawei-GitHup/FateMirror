@@ -7,31 +7,34 @@ export default async function LandingPage() {
   const t = await getTranslations('landing');
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative flex min-h-screen flex-col">
+      {/* ─── 星空背景 ─── */}
+      <div className="starry-bg" />
+      <div className="top-glow" />
+
       {/* ─── Nav ─── */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-border/50 bg-background/80 px-6 py-4 backdrop-blur-xl">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
+      <nav className="relative z-10 flex items-center justify-between px-8 py-5">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
-          <span className="text-xl font-bold tracking-tight">
-            <span className="text-gradient">Fate</span>
-            <span className="text-foreground/70">Mirror</span>
+          <span className="text-lg font-semibold tracking-tight text-foreground/90">
+            FateMirror
           </span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link href="/pricing">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" className="text-sm text-muted-foreground hover:text-foreground">
               {t('pricing')}
             </Button>
           </Link>
           <Link href="/auth/login">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" className="text-sm text-muted-foreground hover:text-foreground">
               {t('login')}
             </Button>
           </Link>
           <Link href="/auth/signup">
-            <Button size="sm" className="btn-gradient border-0 text-white">
+            <Button size="sm" className="btn-gradient overflow-visible border-0 text-sm text-white">
               {t('getStarted')}
             </Button>
           </Link>
@@ -39,30 +42,27 @@ export default async function LandingPage() {
       </nav>
 
       {/* ─── Hero ─── */}
-      <main className="flex flex-1 flex-col items-center justify-center px-6 pt-20 text-center md:pt-32">
-        <div className="max-w-4xl space-y-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            {t('featurePatternsDesc')}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <div className="max-w-3xl space-y-8">
+          {/* Logo Icon */}
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-indigo-500/20 ring-1 ring-white/10">
+            <Sparkles className="h-7 w-7 text-primary" />
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl font-bold leading-[1.08] tracking-tight sm:text-6xl md:text-7xl">
+          <h1 className="text-5xl font-bold leading-[1.1] tracking-tight sm:text-6xl md:text-7xl">
             <span className="text-gradient">{t('hero')}</span>
-            <br />
-            <span className="text-muted-foreground">{t('heroHighlight')}</span>
           </h1>
 
-          {/* Description */}
-          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+          {/* Subtitle */}
+          <p className="mx-auto max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             {t('heroDescription')}
           </p>
 
-          {/* CTA */}
-          <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
+          {/* CTA Buttons */}
+          <div className="flex flex-col items-center justify-center gap-4 pt-2 sm:flex-row">
             <Link href="/auth/signup">
-              <Button size="lg" className="btn-gradient group border-0 px-8 py-6 text-base text-white">
+              <Button size="lg" className="btn-gradient group overflow-visible border-0 px-8 py-6 text-base text-white">
                 {t('cta')}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
@@ -71,54 +71,51 @@ export default async function LandingPage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="border-border/50 bg-card/50 px-8 py-6 text-base backdrop-blur hover:border-primary/30 hover:bg-card"
+                className="btn-outline-glow overflow-visible border-white/10 bg-white/[0.03] px-8 py-6 text-base text-foreground/80 hover:border-white/20 hover:bg-white/[0.06]"
               >
                 {t('seePricing')}
               </Button>
             </Link>
           </div>
+        </div>
 
-          {/* ─── Glow separator ─── */}
-          <div className="separator-glow mx-auto mt-20 w-2/3" />
-
-          {/* ─── Features ─── */}
-          <div className="grid grid-cols-1 gap-5 pt-8 text-left sm:grid-cols-3">
-            <div className="card-glow group rounded-2xl bg-card/60 p-6 backdrop-blur">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                <Brain className="h-5 w-5" />
-              </div>
-              <h3 className="font-semibold text-foreground">{t('featurePatterns')}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t('featurePatternsDesc')}
-              </p>
+        {/* ─── Features ─── */}
+        <div className="mt-32 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-3">
+          <div className="card-glow rounded-xl p-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <Brain className="h-4.5 w-4.5 text-primary" />
             </div>
+            <h3 className="text-sm font-semibold text-foreground">{t('featurePatterns')}</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              {t('featurePatternsDesc')}
+            </p>
+          </div>
 
-            <div className="card-glow group rounded-2xl bg-card/60 p-6 backdrop-blur">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 transition-colors group-hover:bg-indigo-500/20">
-                <RefreshCw className="h-5 w-5" />
-              </div>
-              <h3 className="font-semibold text-foreground">{t('featureCognition')}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t('featureCognitionDesc')}
-              </p>
+          <div className="card-glow rounded-xl p-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10">
+              <RefreshCw className="h-4.5 w-4.5 text-indigo-400" />
             </div>
+            <h3 className="text-sm font-semibold text-foreground">{t('featureCognition')}</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              {t('featureCognitionDesc')}
+            </p>
+          </div>
 
-            <div className="card-glow group rounded-2xl bg-card/60 p-6 backdrop-blur">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-400 transition-colors group-hover:bg-violet-500/20">
-                <TreePine className="h-5 w-5" />
-              </div>
-              <h3 className="font-semibold text-foreground">{t('featureTree')}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t('featureTreeDesc')}
-              </p>
+          <div className="card-glow rounded-xl p-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10">
+              <TreePine className="h-4.5 w-4.5 text-violet-400" />
             </div>
+            <h3 className="text-sm font-semibold text-foreground">{t('featureTree')}</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              {t('featureTreeDesc')}
+            </p>
           </div>
         </div>
       </main>
 
       {/* ─── Footer ─── */}
-      <footer className="mt-20 border-t border-border/30 px-6 py-8 text-center">
-        <p className="text-sm text-muted-foreground/60">
+      <footer className="relative z-10 border-t border-white/[0.04] px-6 py-8 text-center">
+        <p className="text-xs text-muted-foreground/50">
           &copy; {new Date().getFullYear()} FateMirror. {t('footer')}
         </p>
       </footer>
