@@ -1,18 +1,141 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight, Sparkles, Brain, RefreshCw, TreePine, BookOpen, MessageCircle, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LocaleToggle } from '@/components/layout/LocaleToggle';
 
+/* ─── Locale-aware mockup data ─── */
+
+const MOCKUP_DATA = {
+  zh: {
+    journal: {
+      entries: [
+        { title: '回忆海南演唱会', date: '4月12日', tags: ['怀念', '伤感', '记忆'], loops: 0 },
+        { title: '愤怒背后的模式', date: '4月11日', tags: ['愤怒', '身份', '领悟'], loops: 2 },
+        { title: '感恩练习第七天', date: '4月11日', tags: ['感恩', '成长', '习惯'], loops: 0 },
+        { title: '打破深夜刷手机', date: '4月10日', tags: ['焦虑', '习惯', '希望'], loops: 3 },
+      ],
+      title: '日记',
+      count: '6 篇日记',
+      newBtn: '+ 新建',
+    },
+    chat: {
+      title: '引导式对话',
+      status: '进行中',
+      mo1: '嘿，最近有什么一直在你脑海里转的事情吗？大事小事都行，聊聊看。',
+      user1: '工作上什么都答应，感觉快被掏空了...',
+      mo2: '「什么都答应」\u200B——我好奇的是，当你说\u201C好\u201D的时候，你真正害怕的是说\u201C不\u201D之后会发生什么？',
+    },
+    profile: {
+      title: '认知画像',
+      thinking: '思维维度',
+      thinkingLevel: 'L3 系统性',
+      behaviorTitle: '行为原型',
+      behaviors: [
+        { name: '证明者', score: 82, color: '#C084FC' },
+        { name: '讨好者', score: 68, color: '#60A5FA' },
+        { name: '控制者', score: 45, color: '#22D3EE' },
+        { name: '回避者', score: 35, color: '#34D399' },
+      ],
+      patternLabel: '🔄 模式发现',
+      patternDesc: '「每次对别人说好，就是对自己说不」— 5天内出现3次',
+    },
+    tree: {
+      title: '命运树',
+      nodeCount: '20 节点',
+      nodes: [
+        { x: 200, y: 280, r: 10, color: '#3B82F6', label: '职业十字路口' },
+        { x: 120, y: 220, r: 7, color: '#22C55E', label: '讨好型人格' },
+        { x: 280, y: 220, r: 7, color: '#EF4444', label: '愤怒即威胁' },
+        { x: 70, y: 155, r: 6, color: '#A855F7', label: '无法说不' },
+        { x: 155, y: 155, r: 6, color: '#22C55E', label: '第一次说不' },
+        { x: 240, y: 155, r: 6, color: '#3B82F6', label: '重新定义成功' },
+        { x: 320, y: 155, r: 6, color: '#A855F7', label: '自我接纳' },
+        { x: 40, y: 95, r: 5, color: '#A855F7', label: '内疚螺旋' },
+        { x: 100, y: 95, r: 5, color: '#22C55E', label: '数字排毒' },
+        { x: 185, y: 95, r: 5, color: '#3B82F6', label: '家庭对质' },
+        { x: 270, y: 95, r: 5, color: '#EF4444', label: '职场面具' },
+        { x: 340, y: 95, r: 5, color: '#22C55E', label: '放下完美' },
+        { x: 140, y: 45, r: 4, color: '#3B82F6', label: '写给父亲' },
+        { x: 260, y: 45, r: 4, color: '#22C55E', label: '感恩转变' },
+      ],
+      legend: [
+        { color: '#22C55E', label: '里程碑' },
+        { color: '#3B82F6', label: '决策点' },
+        { color: '#A855F7', label: '顿悟' },
+        { color: '#EF4444', label: '危机' },
+      ],
+    },
+  },
+  en: {
+    journal: {
+      entries: [
+        { title: 'Concert Memories', date: 'Apr 12', tags: ['nostalgia', 'sadness', 'memory'], loops: 0 },
+        { title: 'Pattern Behind Anger', date: 'Apr 11', tags: ['anger', 'identity', 'insight'], loops: 2 },
+        { title: 'Gratitude Day Seven', date: 'Apr 11', tags: ['gratitude', 'growth', 'habits'], loops: 0 },
+        { title: 'Breaking Doom Scroll', date: 'Apr 10', tags: ['anxiety', 'habits', 'hope'], loops: 3 },
+      ],
+      title: 'Journal',
+      count: '6 entries',
+      newBtn: '+ New',
+    },
+    chat: {
+      title: 'Guided Chat',
+      status: 'Active',
+      mo1: "Hey, what's been on your mind lately? Big or small, let's talk about it.",
+      user1: "I say yes to everything at work. I feel completely drained...",
+      mo2: '"Say yes to everything" — I\'m curious: when you say "yes," what are you really afraid will happen if you say "no"?',
+    },
+    profile: {
+      title: 'Cognition Profile',
+      thinking: 'Thinking Dimension',
+      thinkingLevel: 'L3 Systemic',
+      behaviorTitle: 'Behavior Archetypes',
+      behaviors: [
+        { name: 'Prover', score: 82, color: '#C084FC' },
+        { name: 'Pleaser', score: 68, color: '#60A5FA' },
+        { name: 'Controller', score: 45, color: '#22D3EE' },
+        { name: 'Avoider', score: 35, color: '#34D399' },
+      ],
+      patternLabel: '🔄 Pattern Detected',
+      patternDesc: '"Every yes to others is a no to yourself" — appeared 3× in 5 days',
+    },
+    tree: {
+      title: 'Destiny Tree',
+      nodeCount: '20 nodes',
+      nodes: [
+        { x: 200, y: 280, r: 10, color: '#3B82F6', label: 'Career Crossroads' },
+        { x: 120, y: 220, r: 7, color: '#22C55E', label: 'People-Pleasing' },
+        { x: 280, y: 220, r: 7, color: '#EF4444', label: 'Anger = Threat' },
+        { x: 70, y: 155, r: 6, color: '#A855F7', label: "Can't Say No" },
+        { x: 155, y: 155, r: 6, color: '#22C55E', label: 'First No' },
+        { x: 240, y: 155, r: 6, color: '#3B82F6', label: 'Redefine Success' },
+        { x: 320, y: 155, r: 6, color: '#A855F7', label: 'Self-Acceptance' },
+        { x: 40, y: 95, r: 5, color: '#A855F7', label: 'Guilt Spiral' },
+        { x: 100, y: 95, r: 5, color: '#22C55E', label: 'Digital Detox' },
+        { x: 185, y: 95, r: 5, color: '#3B82F6', label: 'Family Talk' },
+        { x: 270, y: 95, r: 5, color: '#EF4444', label: 'Work Mask' },
+        { x: 340, y: 95, r: 5, color: '#22C55E', label: 'Let Go Perfect' },
+        { x: 140, y: 45, r: 4, color: '#3B82F6', label: 'Letter to Dad' },
+        { x: 260, y: 45, r: 4, color: '#22C55E', label: 'Gratitude Shift' },
+      ],
+      legend: [
+        { color: '#22C55E', label: 'Milestone' },
+        { color: '#3B82F6', label: 'Decision' },
+        { color: '#A855F7', label: 'Insight' },
+        { color: '#EF4444', label: 'Crisis' },
+      ],
+    },
+  },
+} as const;
+
+type MockLocale = keyof typeof MOCKUP_DATA;
+
 /* ─── App Showcase Mockups ─── */
 
-function JournalMockup() {
-  const entries = [
-    { title: '回忆海南演唱会', date: '4月12日', tags: ['怀念', '伤感', '记忆'], loops: 0, mode: 'freewrite' },
-    { title: '愤怒背后的模式', date: '4月11日', tags: ['愤怒', '身份', '领悟'], loops: 2, mode: 'guided' },
-    { title: '感恩练习第七天', date: '4月11日', tags: ['感恩', '成长', '习惯'], loops: 0, mode: 'freewrite' },
-    { title: '打破深夜刷手机', date: '4月10日', tags: ['焦虑', '习惯', '希望'], loops: 3, mode: 'guided' },
-  ];
+function JournalMockup({ locale }: { locale: MockLocale }) {
+  const d = MOCKUP_DATA[locale].journal;
+  const entries = d.entries;
 
   return (
     <div className="card-glow overflow-hidden rounded-2xl">
@@ -20,10 +143,10 @@ function JournalMockup() {
       <div className="flex items-center justify-between border-b border-white/5 px-5 py-3">
         <div className="flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">Journal</span>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">6 entries</span>
+          <span className="text-sm font-medium text-foreground">{d.title}</span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">{d.count}</span>
         </div>
-        <div className="rounded-lg bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">+ New</div>
+        <div className="rounded-lg bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">{d.newBtn}</div>
       </div>
       {/* Mock entries */}
       <div className="divide-y divide-white/[0.03]">
@@ -55,45 +178,35 @@ function JournalMockup() {
   );
 }
 
-function ChatMockup() {
+function ChatMockup({ locale }: { locale: MockLocale }) {
+  const d = MOCKUP_DATA[locale].chat;
   return (
     <div className="card-glow overflow-hidden rounded-2xl">
-      {/* Mock header */}
       <div className="flex items-center gap-2 border-b border-white/5 px-5 py-3">
         <MessageCircle className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground">引导式对话</span>
-        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] text-green-400">进行中</span>
+        <span className="text-sm font-medium text-foreground">{d.title}</span>
+        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] text-green-400">{d.status}</span>
       </div>
-      {/* Mock conversation */}
       <div className="space-y-4 p-5">
-        {/* Lao Mo message */}
         <div className="flex gap-3">
           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="rounded-xl rounded-tl-sm bg-white/[0.04] px-4 py-2.5">
-            <p className="text-[12px] leading-relaxed text-foreground/80">
-              嘿，最近有什么一直在你脑海里转的事情吗？大事小事都行，聊聊看。
-            </p>
+            <p className="text-[12px] leading-relaxed text-foreground/80">{d.mo1}</p>
           </div>
         </div>
-        {/* User message */}
         <div className="flex justify-end">
           <div className="rounded-xl rounded-tr-sm bg-primary/10 px-4 py-2.5">
-            <p className="text-[12px] leading-relaxed text-foreground/80">
-              工作上什么都答应，感觉快被掏空了...
-            </p>
+            <p className="text-[12px] leading-relaxed text-foreground/80">{d.user1}</p>
           </div>
         </div>
-        {/* Lao Mo response */}
         <div className="flex gap-3">
           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="rounded-xl rounded-tl-sm bg-white/[0.04] px-4 py-2.5">
-            <p className="text-[12px] leading-relaxed text-foreground/80">
-              「什么都答应」——我好奇的是，当你说&ldquo;好&rdquo;的时候，你真正害怕的是说&ldquo;不&rdquo;之后会发生什么？
-            </p>
+            <p className="text-[12px] leading-relaxed text-foreground/80">{d.mo2}</p>
           </div>
         </div>
       </div>
@@ -101,37 +214,28 @@ function ChatMockup() {
   );
 }
 
-function ProfileMockup() {
-  const behaviors = [
-    { name: '证明者', score: 82, color: '#C084FC' },
-    { name: '讨好者', score: 68, color: '#60A5FA' },
-    { name: '控制者', score: 45, color: '#22D3EE' },
-    { name: '回避者', score: 35, color: '#34D399' },
-  ];
-
+function ProfileMockup({ locale }: { locale: MockLocale }) {
+  const d = MOCKUP_DATA[locale].profile;
   return (
     <div className="card-glow overflow-hidden rounded-2xl">
-      {/* Mock header */}
       <div className="flex items-center gap-2 border-b border-white/5 px-5 py-3">
         <BarChart3 className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground">认知画像</span>
+        <span className="text-sm font-medium text-foreground">{d.title}</span>
         <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-400">Lv.4</span>
       </div>
       <div className="space-y-4 p-5">
-        {/* Thinking Level */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-muted-foreground">思维维度</span>
-            <span className="text-[11px] font-semibold text-primary">L3 系统性</span>
+            <span className="text-[11px] font-medium text-muted-foreground">{d.thinking}</span>
+            <span className="text-[11px] font-semibold text-primary">{d.thinkingLevel}</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
             <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-primary/60 to-primary" />
           </div>
         </div>
-        {/* Behavior Archetypes */}
         <div className="space-y-2.5">
-          <span className="text-[11px] font-medium text-muted-foreground">行为原型</span>
-          {behaviors.map((b) => (
+          <span className="text-[11px] font-medium text-muted-foreground">{d.behaviorTitle}</span>
+          {d.behaviors.map((b) => (
             <div key={b.name} className="flex items-center gap-3">
               <span className="w-24 text-[11px] text-foreground/70">{b.name}</span>
               <div className="flex-1">
@@ -143,36 +247,18 @@ function ProfileMockup() {
             </div>
           ))}
         </div>
-        {/* Pattern detected */}
         <div className="rounded-lg border border-amber-400/10 bg-amber-400/[0.03] p-3">
-          <p className="text-[11px] font-medium text-amber-400/80">🔄 模式发现</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
-            「每次对别人说好，就是对自己说不」— 5天内出现3次
-          </p>
+          <p className="text-[11px] font-medium text-amber-400/80">{d.patternLabel}</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{d.patternDesc}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function TreeMockup() {
-  /* Mini SVG-based tree visualization for the landing page */
-  const nodes = [
-    { x: 200, y: 280, r: 10, color: '#3B82F6', label: '职业十字路口' },
-    { x: 120, y: 220, r: 7, color: '#22C55E', label: '讨好型人格' },
-    { x: 280, y: 220, r: 7, color: '#EF4444', label: '愤怒即威胁' },
-    { x: 70, y: 155, r: 6, color: '#A855F7', label: '无法说不' },
-    { x: 155, y: 155, r: 6, color: '#22C55E', label: '第一次说不' },
-    { x: 240, y: 155, r: 6, color: '#3B82F6', label: '重新定义成功' },
-    { x: 320, y: 155, r: 6, color: '#A855F7', label: '自我接纳' },
-    { x: 40, y: 95, r: 5, color: '#A855F7', label: '内疚螺旋' },
-    { x: 100, y: 95, r: 5, color: '#22C55E', label: '数字排毒' },
-    { x: 185, y: 95, r: 5, color: '#3B82F6', label: '家庭对质' },
-    { x: 270, y: 95, r: 5, color: '#EF4444', label: '职场面具' },
-    { x: 340, y: 95, r: 5, color: '#22C55E', label: '放下完美' },
-    { x: 140, y: 45, r: 4, color: '#3B82F6', label: '写给父亲' },
-    { x: 260, y: 45, r: 4, color: '#22C55E', label: '感恩转变' },
-  ];
+function TreeMockup({ locale }: { locale: MockLocale }) {
+  const d = MOCKUP_DATA[locale].tree;
+  const nodes = d.nodes;
 
   const branches: [number, number, number, number][] = [
     [200, 280, 120, 220], [200, 280, 280, 220],
@@ -190,8 +276,8 @@ function TreeMockup() {
     <div className="card-glow overflow-hidden rounded-2xl">
       <div className="flex items-center gap-2 border-b border-white/5 px-5 py-3">
         <TreePine className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground">命运树</span>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">20 节点</span>
+        <span className="text-sm font-medium text-foreground">{d.title}</span>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">{d.nodeCount}</span>
       </div>
       <div className="flex items-center justify-center p-4">
         <svg viewBox="0 0 400 320" className="h-[260px] w-full">
@@ -240,12 +326,7 @@ function TreeMockup() {
           ))}
           {/* Legend */}
           <g transform="translate(10, 305)">
-            {[
-              { color: '#22C55E', label: '里程碑' },
-              { color: '#3B82F6', label: '决策点' },
-              { color: '#A855F7', label: '顿悟' },
-              { color: '#EF4444', label: '危机' },
-            ].map((item, i) => (
+            {d.legend.map((item, i) => (
               <g key={i} transform={`translate(${i * 85}, 0)`}>
                 <circle cx={5} cy={0} r={3} fill={item.color} />
                 <text x={12} y={3} fill="rgba(255,255,255,0.5)" fontSize={8}>{item.label}</text>
@@ -259,6 +340,8 @@ function TreeMockup() {
 }
 
 export default async function LandingPage() {
+  const rawLocale = await getLocale();
+  const locale: MockLocale = rawLocale === 'zh' ? 'zh' : 'en';
   const t = await getTranslations('landing');
 
   return (
@@ -338,11 +421,11 @@ export default async function LandingPage() {
         {/* Row 1: Journal + Chat */}
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <JournalMockup />
+            <JournalMockup locale={locale} />
             <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseJournal')}</p>
           </div>
           <div>
-            <ChatMockup />
+            <ChatMockup locale={locale} />
             <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseChat')}</p>
           </div>
         </div>
@@ -350,11 +433,11 @@ export default async function LandingPage() {
         {/* Row 2: Tree + Profile */}
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <div>
-            <TreeMockup />
+            <TreeMockup locale={locale} />
             <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseTree')}</p>
           </div>
           <div>
-            <ProfileMockup />
+            <ProfileMockup locale={locale} />
             <p className="mt-3 text-center text-xs text-muted-foreground/60">{t('showcaseProfile')}</p>
           </div>
         </div>
