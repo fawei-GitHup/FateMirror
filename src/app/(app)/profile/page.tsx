@@ -14,6 +14,7 @@ export default async function ProfilePage() {
   const locale = await getLocale();
   const t = await getTranslations('profile');
   const tJournal = await getTranslations('journal');
+  const tLevels = await getTranslations('levels');
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -44,7 +45,7 @@ export default async function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Flame className="size-5 text-orange-400" />
-            {t('level', { level: profile?.level ?? 0, name: profile?.level_name ?? 'Sleeper' })}
+            {t('level', { level: profile?.level ?? 0, name: tLevels(`level${profile?.level ?? 0}` as 'level0') })}
           </CardTitle>
           <CardDescription>{t(`levelDescription${profile?.level ?? 0}` as 'levelDescription0')}</CardDescription>
         </CardHeader>
